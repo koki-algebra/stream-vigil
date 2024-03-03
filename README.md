@@ -1,2 +1,3 @@
-# streaming_anomaly_detection
+# Streaming Anomaly Detection
+
 Streaming Anomaly Detection Library

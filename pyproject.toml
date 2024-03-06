@@ -1,5 +1,5 @@
 [project]
-name = "streaming-anomaly-detection"
+name = "streamvigil"
 version = "0.1.0"
 description = "Add your description here"
 authors = [
@@ -11,7 +11,7 @@ readme = "README.md"
 requires-python = ">= 3.8"
 
 [project.scripts]
-main = "streaming_anomaly_detection:main"
+main = "streamvigil:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -26,10 +26,10 @@ dev-dependencies = [
 ]
 
 [tool.rye.scripts]
-fmt = { chain = ["ruff format ./src ./tests"]}
+fmt = { chain = ["ruff format ./streamvigil ./tests"]}
 lint = { chain = [
-    "ruff check --fix ./src ./tests",
-    "mypy ./src ./tests"
+    "ruff check --fix ./streamvigil ./tests",
+    "mypy ./streamvigil ./tests"
 ]}
 test = { chain = ["pytest ./tests"] }
 
@@ -37,4 +37,4 @@ test = { chain = ["pytest ./tests"] }
 allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/streaming_anomaly_detection"]
+packages = ["streamvigil"]

@@ -26,12 +26,12 @@ dev-dependencies = [
 ]
 
 [tool.rye.scripts]
-fmt = { chain = ["ruff format ./streamvigil ./tests"]}
+fmt = { chain = ["ruff format ./streamvigil"]}
 lint = { chain = [
-    "ruff check --fix ./streamvigil ./tests",
-    "mypy ./streamvigil ./tests"
+    "ruff check --fix ./streamvigil",
+    "mypy ./streamvigil"
 ]}
-test = { chain = ["pytest ./tests"] }
+test = { chain = ["pytest ./streamvigil/tests"] }
 
 [tool.hatch.metadata]
 allow-direct-references = true

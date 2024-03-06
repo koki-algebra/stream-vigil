@@ -6,6 +6,8 @@ authors = [
     { name = "koki-algebra", email = "biz.kokiyamada1022@gmail.com" }
 ]
 dependencies = [
+    "torch>=2.2.1",
+    "numpy>=1.26.4",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"

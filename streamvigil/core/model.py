@@ -1,24 +1,40 @@
+import uuid
+
 import torch
+
+from streamvigil.core import AutoEncoder
 
 
 class Model:
     """
-    Model Pool.
+    Model.
 
     Attributes
     ----------
     """
 
-    def __init__(self) -> None:
+    def __init__(self, auto_encoder: AutoEncoder) -> None:
+        self.__model_id = uuid.uuid4()
         self.__reliability = 0.0
+        self._auto_encoder = auto_encoder
 
     @property
-    def reliability(self):
+    def model_id(self) -> uuid.UUID:
+        """
+        model_id : uuid.UUID
+            Model ID
+        """
+
+        return self.__model_id
+
+    @property
+    def reliability(self) -> float:
         """
         reliability : float
             A model reliability.
             This reliability should be between 0.0 and 1.0.
         """
+
         return self.__reliability
 
     @reliability.setter
@@ -41,7 +57,8 @@ class Model:
         x_pred : torch.Tensor
             Data matrix reconstructed by autoencoder.
         """
-        return x
+
+        return self._auto_encoder.forward(x)
 
     def train(self, x: torch.Tensor):
         """

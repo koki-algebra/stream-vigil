@@ -14,20 +14,20 @@ class ModelPool:
     ----------
     reliability_threshold : float
         A model pool reliability threshold.
-        This threshold should be between 0.0 and 1.0.
+        This threshold must be between 0.0 and 1.0.
 
     similarity_threshold : float
         A similarity threshold between models.
-        This threshold should be between 0.0 and 1.0.
+        This threshold must be between 0.0 and 1.0.
     """
 
     def __init__(
         self, auto_encoder: AutoEncoder, reliability_threshold=0.5, similarity_threshold=0.5, max_model_num=5
     ) -> None:
         if reliability_threshold < 0.0 or reliability_threshold > 1.0:
-            raise ValueError("A model pool reliability threshold should be between 0.0 and 1.0")
+            raise ValueError("A model pool reliability threshold must be between 0.0 and 1.0")
         if similarity_threshold < 0.0 or similarity_threshold > 1.0:
-            raise ValueError("A similarity threshold should be between 0.0 and 1.0")
+            raise ValueError("A similarity threshold must be between 0.0 and 1.0")
 
         self._reliability_threshold = reliability_threshold
         self._similarity_threshold = similarity_threshold
@@ -137,10 +137,7 @@ def _anomaly_scores(pool: Dict[uuid.UUID, Model], x: torch.Tensor) -> torch.Tens
     anomaly_scores = torch.zeros(1, x.shape[0])
 
     for model in pool.values():
-        x_pred = model.predict(x)
-
-        # square error
-        scores = (x - x_pred).pow(2).sum(dim=1)
+        scores = model.predict(x)
 
         # standardized square error
         scores = (scores - scores.mean()) / scores.std()

@@ -1,3 +1,3 @@
-from .auto_encoder import AutoEncoder
-from .model import Model
-from .pool import ModelPool
+from ._auto_encoder import AutoEncoder
+from ._model import Model
+from ._pool import ModelPool

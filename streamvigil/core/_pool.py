@@ -34,7 +34,16 @@ class ModelPool:
         self._max_model_num = max_model_num
         self._auto_encoder = auto_encoder
 
+        # model pool reliability
+        self._reliability = 0.0
+        # model pool
         self._pool: Dict[uuid.UUID, Model] = {}
+
+    def is_drift(self) -> bool:
+        """
+        Whether concept drift is occurring.
+        """
+        return self._reliability < self._reliability_threshold
 
     def get_models(self) -> List[Model]:
         """
@@ -62,6 +71,7 @@ class ModelPool:
             Anomaly scores.
         """
         anomaly_scores = torch.zeros(1, x.shape[0])
+        tmp = 1.0
 
         for model in self._pool.values():
             scores = model.predict(x)
@@ -70,6 +80,11 @@ class ModelPool:
             scores = (scores - scores.mean()) / scores.std()
 
             anomaly_scores += scores * model.reliability
+
+            tmp *= 1 - model.reliability
+
+        # update model pool reliability
+        self._reliability = 1 - tmp
 
         return anomaly_scores
 

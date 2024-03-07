@@ -1,5 +1,5 @@
 import uuid
-from typing import Dict
+from typing import Dict, List
 
 import torch
 
@@ -35,6 +35,17 @@ class ModelPool:
         self._auto_encoder = auto_encoder
 
         self._pool: Dict[uuid.UUID, Model] = {}
+
+    def get_models(self) -> List[Model]:
+        """
+        Get a list of models included in the model pool.
+
+        Returns
+        -------
+        models : List[Model]
+        """
+
+        return list(self._pool.values())
 
     def predict(self, x: torch.Tensor) -> torch.Tensor:
         """

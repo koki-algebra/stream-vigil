@@ -58,11 +58,20 @@ class ModelPool:
 
         Returns
         -------
-        y : torch.Tensor
-            Vector of normal or anomaly 0, 1.
+        anomaly_scores : torch.Tensor
+            Anomaly scores.
         """
+        anomaly_scores = torch.zeros(1, x.shape[0])
 
-        return _anomaly_scores(self._pool, x)
+        for model in self._pool.values():
+            scores = model.predict(x)
+
+            # standardized square error
+            scores = (scores - scores.mean()) / scores.std()
+
+            anomaly_scores += scores * model.reliability
+
+        return anomaly_scores
 
     def add_model(self) -> uuid.UUID:
         """
@@ -117,31 +126,3 @@ class ModelPool:
         -------
         """
         pass
-
-
-def _anomaly_scores(pool: Dict[uuid.UUID, Model], x: torch.Tensor) -> torch.Tensor:
-    """
-    Concept-Driven Inference.
-
-    Parameters
-    ----------
-    pool : Dict[uuid.UUID, Model]
-        Model pool.
-
-    Returns
-    -------
-    scores : torch.Tensor
-        Anomaly scores.
-    """
-
-    anomaly_scores = torch.zeros(1, x.shape[0])
-
-    for model in pool.values():
-        scores = model.predict(x)
-
-        # standardized square error
-        scores = (scores - scores.mean()) / scores.std()
-
-        anomaly_scores += scores * model.reliability
-
-    return anomaly_scores

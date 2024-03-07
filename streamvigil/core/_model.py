@@ -1,3 +1,4 @@
+import math
 import uuid
 
 import torch
@@ -88,7 +89,32 @@ class Model:
         # square error
         scores = (x - x_pred).pow(2).sum(dim=1)
 
+        # estimate the model reliability
+        self._update_reliability(scores)
+
         return scores
+
+    def _update_reliability(self, scores: torch.Tensor) -> None:
+        """
+        Update model reliability based on Hoeffding's bound.
+
+        Parameters
+        ----------
+        scores : torch.Tensor
+            Anomaly scores.
+
+        Returns
+        -------
+        """
+        if len(scores) != 2 or scores.shape[0] != 1:
+            raise ValueError("scores shape must be (1, n).")
+
+        batch_size = scores.shape[1]
+        max_score = max(self.last_max_score, scores.max().item())
+        min_score = min(self.last_min_score, scores.min().item())
+        gap = abs(self.last_mean_score - scores.mean().item())
+
+        self.reliability = math.exp((-batch_size * gap * gap) / ((max_score - min_score) * (max_score - min_score)))
 
     def train(self, x: torch.Tensor):
         """

@@ -38,7 +38,7 @@ class ModelPool:
 
     def predict(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Run predictions on data matrix x.
+        Run predictions on data matrix `x`.
 
         Parameters
         ----------
@@ -48,7 +48,7 @@ class ModelPool:
         Returns
         -------
         y : torch.Tensor
-            Anomaly or normal one-hot vector.
+            Vector of normal or anomaly 0, 1.
         """
 
         y = torch.randint(0, 2, (x.shape[1], 1), dtype=torch.float64)
@@ -79,6 +79,23 @@ class ModelPool:
         self._pool[model.model_id] = model
 
         return model.model_id
+
+    def train(self, model_id: uuid.UUID, x: torch.Tensor) -> None:
+        """
+        Train the model with `model_id` with data matrix `x`
+
+        Parameters
+        ----------
+        model_id : uuid.UUID
+            ID of the model to be trained.
+
+        x : torch.Tensor
+            Data matrix
+
+        Returns
+        -------
+        """
+        self._pool[model_id].train(x)
 
     def compress(self) -> None:
         """

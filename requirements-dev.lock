@@ -32,6 +32,8 @@ packaging==23.2
 pluggy==1.4.0
     # via pytest
 pytest==8.0.2
+    # via pytest-mock
+pytest-mock==3.12.0
 ruff==0.3.0
 sympy==1.12
     # via torch

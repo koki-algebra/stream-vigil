@@ -25,15 +25,16 @@ dev-dependencies = [
     "ruff>=0.3.0",
     "mypy>=1.8.0",
     "pytest>=8.0.2",
+    "pytest-mock>=3.12.0",
 ]
 
 [tool.rye.scripts]
-fmt = { chain = ["ruff format ./streamvigil"]}
+fmt = { chain = ["ruff format ./streamvigil ./tests"]}
 lint = { chain = [
-    "ruff check --fix ./streamvigil",
-    "mypy ./streamvigil"
+    "ruff check --fix ./streamvigil ./tests",
+    "mypy ./streamvigil ./tests"
 ]}
-test = { chain = ["pytest ./streamvigil/tests"] }
+test = { chain = ["pytest ./tests"] }
 
 [tool.hatch.metadata]
 allow-direct-references = true

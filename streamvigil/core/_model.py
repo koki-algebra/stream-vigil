@@ -89,10 +89,10 @@ class Model:
         Returns
         -------
         """
-        if len(scores) != 2 or scores.shape[0] != 1:
+        if scores.dim() != 1:
             raise ValueError("scores shape must be (1, n).")
 
-        batch_size = scores.shape[1]
+        batch_size = scores.numel()
         max_score = max(self._last_max_score, scores.max().item())
         min_score = min(self._last_min_score, scores.min().item())
         gap = abs(self._last_mean_score - scores.mean().item())

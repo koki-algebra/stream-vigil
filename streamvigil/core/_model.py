@@ -1,7 +1,10 @@
 import math
 import uuid
+from logging import getLogger
 
 import torch
+from torch.nn import MSELoss
+from torch.optim import Adam
 
 from streamvigil.core import AutoEncoder
 
@@ -14,10 +17,17 @@ class Model:
     ----------
     """
 
-    def __init__(self, auto_encoder: AutoEncoder) -> None:
+    def __init__(self, auto_encoder: AutoEncoder, max_train_epochs=100) -> None:
         self.__model_id = uuid.uuid4()
         self._auto_encoder = auto_encoder
         self.__reliability = 0.0
+        self._max_train_epochs = max_train_epochs
+
+        # Loss function
+        self._loss_fn = MSELoss()
+
+        # Optimizer
+        self._optimizer = Adam(self._auto_encoder.parameters())
 
         # Maximum anomaly score on the last batch used to update the model
         self._last_max_score = 0.0
@@ -58,7 +68,7 @@ class Model:
         scores : torch.Tensor
             Anomaly scores.
         """
-        x_pred = self._auto_encoder.forward(x)
+        x_pred = self._auto_encoder(x)
         # square error
         scores = (x - x_pred).pow(2).sum(dim=1)
 
@@ -98,7 +108,21 @@ class Model:
         x : torch.Tensor
             Data matrix.
         """
-        # Todo: training the model
+        logger = getLogger(__name__)
+
+        # Training the model
+        self._auto_encoder.train()
+        for epoch in range(self._max_train_epochs):
+            logger.info("Epoch {}".format(epoch))
+
+            # Compute prediction and loss
+            x_pred = self._auto_encoder(x)
+            loss = self._loss_fn(x_pred, x)
+
+            # Backpropagation
+            loss.backward()
+            self._optimizer.step()
+            self._optimizer.zero_grad()
 
         # Update last batch scores
         scores = self.predict(x)

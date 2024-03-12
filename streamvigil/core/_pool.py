@@ -4,6 +4,7 @@ from typing import Dict, List
 import torch
 
 from streamvigil.core import AutoEncoder, Model
+from streamvigil.core._similarity import linear_CKA
 
 
 class ModelPool:
@@ -112,6 +113,28 @@ class ModelPool:
         self._pool[model.model_id] = model
 
         return model.model_id
+
+    def similarity(self, x: torch.Tensor, model_id1: uuid.UUID, model_id2: uuid.UUID) -> float:
+        """
+        Calculate the similarity between model ID1 and ID2.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Data matrix
+
+        model_id1, model_id2 : uuid.UUID
+            IDs for which you want to calculate similarity.
+
+        Returns
+        -------
+        similarity : float
+            Model similarity.
+        """
+        z1 = self._pool[model_id1].encode(x)
+        z2 = self._pool[model_id2].encode(x)
+
+        return linear_CKA(z1, z2).item()
 
     def train(self, model_id: uuid.UUID, x: torch.Tensor) -> None:
         """

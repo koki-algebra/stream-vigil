@@ -1,6 +1,7 @@
 import uuid
 
 import pytest
+import torch
 
 from streamvigil.core import Model, ModelPool
 from tests.mock import MockAutoEncoder
@@ -40,3 +41,12 @@ def test_get_models():
     models = pool.get_models()
     assert len(models) == 3
     assert isinstance(models[0], Model)
+
+
+def test_similarity():
+    pool = ModelPool(auto_encoder)
+    x = torch.randn(5, 10)
+    model_id1 = pool.add_model()
+    model_id2 = pool.add_model()
+    similarity = pool.similarity(x, model_id1, model_id2)
+    assert similarity > 0.0

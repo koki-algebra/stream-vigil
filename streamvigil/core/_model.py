@@ -54,6 +54,9 @@ class Model:
         """
         return self.__reliability
 
+    def encode(self, x: torch.Tensor) -> torch.Tensor:
+        return self._auto_encoder.encode(x)
+
     def predict(self, x: torch.Tensor) -> torch.Tensor:
         """
         Run predictions on data `x`.

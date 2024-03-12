@@ -163,6 +163,23 @@ class ModelPool:
         """
         Merge source model into destination model.
         """
+        # Weghts
+        w1 = 0.5
+        w2 = 0.5
+
+        # Model parameters
+        src_params = self.get_model(src_id)._auto_encoder.state_dict()
+        dst_params = self.get_model(dst_id)._auto_encoder.state_dict()
+
+        # Merge parameters
+        for key in src_params:
+            dst_params[key] = w1 * src_params[key] + w2 * dst_params[key]
+
+        # Load parameters
+        self._pool[dst_id]._auto_encoder.load_state_dict(dst_params)
+
+        # Remove source model
+        self._pool.pop(src_id)
 
     def compress(self, x: torch.Tensor, target_model_id: uuid.UUID) -> None:
         """

@@ -50,3 +50,14 @@ def test_similarity():
     model_id2 = pool.add_model()
     similarity = pool.similarity(x, model_id1, model_id2)
     assert similarity > 0.0
+
+
+def test_merge_models():
+    pool = ModelPool(auto_encoder)
+    src_id = pool.add_model()
+    dst_id = pool.add_model()
+    pool.add_model()
+
+    assert len(pool.get_models()) == 3
+    pool._merge_models(src_id, dst_id)
+    assert len(pool.get_models()) == 2

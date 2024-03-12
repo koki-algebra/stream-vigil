@@ -4,7 +4,7 @@ from logging import getLogger
 
 import torch
 from torch.nn import MSELoss
-from torch.optim import Adam
+from torch.optim import Adam, Optimizer
 
 from streamvigil.core import AutoEncoder
 
@@ -25,9 +25,6 @@ class Model:
 
         # Loss function
         self._loss_fn = MSELoss()
-
-        # Optimizer
-        self._optimizer = Adam(self._auto_encoder.parameters())
 
         # Maximum anomaly score on the last batch used to update the model
         self._last_max_score = 0.0
@@ -102,6 +99,10 @@ class Model:
 
         self.__reliability = math.exp((-batch_size * gap * gap) / ((max_score - min_score) * (max_score - min_score)))
 
+    def _load_optimizer(self) -> Optimizer:
+        optimizer = Adam(self._auto_encoder.parameters())
+        return optimizer
+
     def train(self, x: torch.Tensor):
         """
         Train on data matrix x.
@@ -112,6 +113,9 @@ class Model:
             Data matrix.
         """
         logger = getLogger(__name__)
+
+        # Optimizer
+        optimizer = self._load_optimizer()
 
         # Training the model
         self._auto_encoder.train()
@@ -124,8 +128,8 @@ class Model:
 
             # Backpropagation
             loss.backward()
-            self._optimizer.step()
-            self._optimizer.zero_grad()
+            optimizer.step()
+            optimizer.zero_grad()
 
         # Update last batch scores
         scores = self.predict(x)

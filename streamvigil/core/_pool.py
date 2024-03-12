@@ -57,6 +57,12 @@ class ModelPool:
 
         return list(self._pool.values())
 
+    def get_model(self, model_id: uuid.UUID) -> Model:
+        """
+        Get the model with `model_id`.
+        """
+        return self._pool[model_id]
+
     def predict(self, x: torch.Tensor) -> torch.Tensor:
         """
         Run predictions on data matrix `x`.
@@ -74,7 +80,7 @@ class ModelPool:
         anomaly_scores = torch.zeros(1, x.shape[0])
         tmp = 1.0
 
-        for model in self._pool.values():
+        for model in self.get_models():
             scores = model.predict(x)
 
             # standardized square error
@@ -103,7 +109,7 @@ class ModelPool:
             ID of newly added model.
         """
 
-        if len(self._pool) >= self._max_model_num:
+        if len(self.get_models()) >= self._max_model_num:
             raise ValueError("The maximum number of models in the model pool is {}".format(self._max_model_num))
 
         # initialize new model
@@ -131,8 +137,8 @@ class ModelPool:
         similarity : float
             Model similarity.
         """
-        z1 = self._pool[model_id1].encode(x)
-        z2 = self._pool[model_id2].encode(x)
+        z1 = self.get_model(model_id1).encode(x)
+        z2 = self.get_model(model_id2).encode(x)
 
         return linear_CKA(z1, z2).item()
 
@@ -153,7 +159,12 @@ class ModelPool:
         """
         self._pool[model_id].train(x)
 
-    def compress(self) -> None:
+    def _merge_models(self, src_id: uuid.UUID, dst_id: uuid.UUID) -> None:
+        """
+        Merge source model into destination model.
+        """
+
+    def compress(self, x: torch.Tensor, target_model_id: uuid.UUID) -> None:
         """
         Compress the model pool.
 

@@ -181,7 +181,22 @@ class ModelPool:
         # Remove source model
         self._pool.pop(src_id)
 
-    def compress(self, x: torch.Tensor, target_model_id: uuid.UUID) -> None:
+    def find_most_similar_model(self, x: torch.Tensor, model_id: uuid.UUID) -> tuple[uuid.UUID, float]:
+        models = self.get_models()
+        if len(models) <= 1:
+            raise ValueError("No other models exist")
+
+        max_sim = -1.0
+        for model in models:
+            if model.model_id != model_id:
+                sim = self.similarity(x, model_id, model.model_id)
+                if max_sim < sim:
+                    max_id = model.model_id
+                    max_sim = sim
+
+        return max_id, max_sim
+
+    def compress(self, x: torch.Tensor, model_id: uuid.UUID) -> None:
         """
         Compress the model pool.
 

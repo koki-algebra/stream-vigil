@@ -211,6 +211,9 @@ class ModelPool:
         is_compressed : bool
             Whether model pool compression was performed.
         """
+        if len(self.get_models()) <= 1:
+            return False
+
         # Find the most similar model
         src_id, sim = self.find_most_similar_model(x, dst_id)
 

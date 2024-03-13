@@ -94,9 +94,6 @@ def test_compress():
 
     dst_id = pool.add_model()
 
-    with pytest.raises(ValueError):
-        pool.compress(x, dst_id)
-
     pool.add_model()
     pool.add_model()
 

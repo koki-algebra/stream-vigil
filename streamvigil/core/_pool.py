@@ -196,14 +196,26 @@ class ModelPool:
 
         return max_id, max_sim
 
-    def compress(self, x: torch.Tensor, model_id: uuid.UUID) -> None:
+    def compress(self, x: torch.Tensor, dst_id: uuid.UUID) -> bool:
         """
         Compress the model pool.
 
         Parameters
         ----------
+        dst_id : uuid.UUID
+            Destination model ID.
+            Other models will be merged into this model.
 
         Returns
         -------
+        is_compressed : bool
+            Whether model pool compression was performed.
         """
-        pass
+        # Find the most similar model
+        src_id, sim = self.find_most_similar_model(x, dst_id)
+
+        if sim >= self._similarity_threshold:
+            self._merge_models(src_id, dst_id)
+            return True
+
+        return False

@@ -85,3 +85,19 @@ def test_find_most_similar_model():
     assert id is not None
     assert id != target_id
     assert sim > 0.0
+
+
+def test_compress():
+    pool = ModelPool(auto_encoder, max_model_num=10)
+
+    x = torch.randn(5, 10)
+
+    dst_id = pool.add_model()
+
+    with pytest.raises(ValueError):
+        pool.compress(x, dst_id)
+
+    pool.add_model()
+    pool.add_model()
+
+    assert pool.compress(x, dst_id)

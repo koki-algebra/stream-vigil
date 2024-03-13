@@ -77,7 +77,7 @@ class ModelPool:
         anomaly_scores : torch.Tensor
             Anomaly scores.
         """
-        anomaly_scores = torch.zeros(1, x.shape[0])
+        anomaly_scores = torch.zeros(x.shape[0])
         tmp = 1.0
 
         for model in self.get_models():

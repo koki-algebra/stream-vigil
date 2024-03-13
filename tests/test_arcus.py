@@ -25,4 +25,6 @@ def test_run():
     arcus = ARCUS(auto_encoder)
     arcus.init(x)
 
-    arcus.run(x)
+    scores = arcus.run(x)
+    assert scores.dim() == 1
+    assert scores.numel() == 5

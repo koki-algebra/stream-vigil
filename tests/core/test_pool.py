@@ -98,3 +98,16 @@ def test_compress():
     pool.add_model()
 
     assert pool.compress(x, dst_id)
+
+
+def test_predict():
+    pool = ModelPool(auto_encoder)
+    pool.add_model()
+    pool.add_model()
+    pool.add_model()
+
+    x = torch.randn(5, 10)
+
+    scores = pool.predict(x)
+    assert scores.dim() == 1
+    assert scores.numel() == 5

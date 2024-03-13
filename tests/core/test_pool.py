@@ -61,3 +61,27 @@ def test_merge_models():
     assert len(pool.get_models()) == 3
     pool._merge_models(src_id, dst_id)
     assert len(pool.get_models()) == 2
+
+
+def test_find_most_similar_model():
+    pool = ModelPool(auto_encoder, max_model_num=10)
+
+    x = torch.randn(5, 10)
+
+    target_id = pool.add_model()
+
+    # Error when there is no model other than target
+    with pytest.raises(ValueError):
+        pool.find_most_similar_model(x, target_id)
+
+    # Add models
+    pool.add_model()
+    pool.add_model()
+    pool.add_model()
+    pool.add_model()
+    pool.add_model()
+
+    id, sim = pool.find_most_similar_model(x, target_id)
+    assert id is not None
+    assert id != target_id
+    assert sim > 0.0

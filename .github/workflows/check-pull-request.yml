@@ -13,12 +13,8 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
       - name: Install Rye
-        id: setup-rye
         uses: eifinger/setup-rye@v2
-        with:
-          enable-cache: true
       - name: Install Dependencies
-        if: steps.setup-rye.outputs.cache-hit != 'true'
         run: rye sync
       - name: Lint
         run: rye run lint

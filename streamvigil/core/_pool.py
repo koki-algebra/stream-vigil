@@ -4,7 +4,7 @@ from typing import Dict, List
 import torch
 
 from streamvigil.core import AutoEncoder, Model
-from streamvigil.core._similarity import linear_CKA
+from streamvigil.core.similarity import linear_CKA
 
 
 class ModelPool:

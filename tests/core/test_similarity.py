@@ -1,6 +1,6 @@
 import torch
 
-from streamvigil.core._similarity import _centering, _kernel_HSIC, _linear_HSIC, _rbf, kernel_CKA, linear_CKA
+from streamvigil.core.similarity import _centering, _kernel_HSIC, _linear_HSIC, _rbf, kernel_CKA, linear_CKA
 
 
 def test_centering():

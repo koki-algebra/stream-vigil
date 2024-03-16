@@ -23,7 +23,7 @@ class ModelPool:
     """
 
     def __init__(
-        self, auto_encoder: AutoEncoder, reliability_threshold=0.5, similarity_threshold=0.5, max_model_num=5
+        self, auto_encoder: AutoEncoder, reliability_threshold=0.95, similarity_threshold=0.8, max_model_num=5
     ) -> None:
         if reliability_threshold < 0.0 or reliability_threshold > 1.0:
             raise ValueError("A model pool reliability threshold must be between 0.0 and 1.0")

@@ -26,28 +26,28 @@ def test_rbf():
 
 
 def test_kernel_HSIC():
-    x1 = torch.randn(2, 3)
-    x2 = torch.randn(2, 3)
+    x1 = torch.randn(100, 64)
+    x2 = torch.randn(100, 64)
     got = _kernel_HSIC(x1, x2)
     assert got.dim() == 0
 
 
 def test_linear_HSIC():
-    x1 = torch.randn(2, 3)
-    x2 = torch.randn(2, 3)
+    x1 = torch.randn(100, 64)
+    x2 = torch.randn(100, 64)
     got = _linear_HSIC(x1, x2)
     assert got.dim() == 0
 
 
 def test_linear_CKA():
-    x1 = torch.randn(2, 3)
-    x2 = torch.randn(2, 3)
+    x1 = torch.randn(100, 64)
+    x2 = torch.randn(100, 64)
     got = linear_CKA(x1, x2)
     assert got.dim() == 0
 
 
 def test_kernel_CKA():
-    x1 = torch.randn(2, 3)
-    x2 = torch.randn(2, 3)
+    x1 = torch.randn(100, 64)
+    x2 = torch.randn(100, 64)
     got = kernel_CKA(x1, x2)
     assert got.dim() == 0

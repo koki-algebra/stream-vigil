@@ -93,7 +93,7 @@ class ModelPool:
         # update model pool reliability
         self._reliability = 1 - tmp
 
-        return anomaly_scores
+        return anomaly_scores.sigmoid()
 
     def add_model(self) -> uuid.UUID:
         """

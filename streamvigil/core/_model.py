@@ -68,9 +68,12 @@ class Model:
         scores : torch.Tensor
             Anomaly scores.
         """
-        x_pred = self._auto_encoder(x)
+        x_pred: torch.Tensor = self._auto_encoder(x)
         # square error
-        scores = (x - x_pred).pow(2).sum(dim=1)
+        errs = (x - x_pred).pow(2).sum(dim=1)
+
+        # anomaly scores
+        scores = errs.sigmoid()
 
         # estimate the model reliability
         self._update_reliability(scores)

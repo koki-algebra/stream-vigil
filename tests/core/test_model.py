@@ -19,11 +19,15 @@ def test_model_id():
 def test_predict():
     model = Model(auto_encoder)
 
-    batch_size = 5
+    batch_size = 128
     feature_dim = 10
     x = torch.randn(batch_size, feature_dim)
+
+    model.train(x)
 
     scores = model.predict(x)
 
     assert scores.dim() == 1
     assert scores.numel() == batch_size
+
+    assert model.reliability >= 0.0 and model.reliability <= 1.0

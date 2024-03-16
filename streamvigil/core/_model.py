@@ -92,12 +92,17 @@ class Model:
         if scores.dim() != 1:
             raise ValueError("scores shape must be (1, n).")
 
+        # Small value to avoid division by zero. Default: 1e-8
+        eps = 1e-8
+
         batch_size = scores.numel()
         max_score = max(self._last_max_score, scores.max().item())
         min_score = min(self._last_min_score, scores.min().item())
         gap = abs(self._last_mean_score - scores.mean().item())
 
-        self.__reliability = math.exp((-batch_size * gap * gap) / ((max_score - min_score) * (max_score - min_score)))
+        self.__reliability = math.exp(
+            (-batch_size * gap * gap) / max((max_score - min_score) * (max_score - min_score), eps)
+        )
 
     def _load_optimizer(self) -> Optimizer:
         optimizer = Adam(self._auto_encoder.parameters())

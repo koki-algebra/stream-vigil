@@ -1,10 +1,11 @@
+import copy
 import uuid
 from typing import Dict, List
 
 import torch
 
-from streamvigil.core import AutoEncoder, Model
-from streamvigil.core.similarity import linear_CKA
+from ._anomaly_detector import AnomalyDetector
+from .similarity import linear_CKA
 
 
 class ModelPool:
@@ -23,7 +24,7 @@ class ModelPool:
     """
 
     def __init__(
-        self, auto_encoder: AutoEncoder, reliability_threshold=0.95, similarity_threshold=0.8, max_model_num=5
+        self, detector: AnomalyDetector, reliability_threshold=0.95, similarity_threshold=0.8, max_model_num=5
     ) -> None:
         if reliability_threshold < 0.0 or reliability_threshold > 1.0:
             raise ValueError("A model pool reliability threshold must be between 0.0 and 1.0")
@@ -33,12 +34,12 @@ class ModelPool:
         self._reliability_threshold = reliability_threshold
         self._similarity_threshold = similarity_threshold
         self._max_model_num = max_model_num
-        self._auto_encoder = auto_encoder
+        self._detector = detector
 
         # model pool reliability
         self._reliability = 0.0
         # model pool
-        self._pool: Dict[uuid.UUID, Model] = {}
+        self._pool: Dict[uuid.UUID, AnomalyDetector] = {}
 
     def is_drift(self) -> bool:
         """
@@ -46,7 +47,7 @@ class ModelPool:
         """
         return self._reliability < self._reliability_threshold
 
-    def get_models(self) -> List[Model]:
+    def get_models(self) -> List[AnomalyDetector]:
         """
         Get a list of models included in the model pool.
 
@@ -57,7 +58,7 @@ class ModelPool:
 
         return list(self._pool.values())
 
-    def get_model(self, model_id: uuid.UUID) -> Model:
+    def get_model(self, model_id: uuid.UUID) -> AnomalyDetector:
         """
         Get the model with `model_id`.
         """
@@ -81,9 +82,13 @@ class ModelPool:
         tmp = 1.0
 
         for model in self.get_models():
+            # Predict the anomaly scores
             scores = model.predict(x)
 
-            # standardized square error
+            # Update the model reliability
+            model.update_reliability(scores)
+
+            # Standardized square error
             scores = (scores - scores.mean()) / scores.std()
 
             anomaly_scores += scores * model.reliability
@@ -113,12 +118,13 @@ class ModelPool:
             raise ValueError("The maximum number of models in the model pool is {}".format(self._max_model_num))
 
         # initialize new model
-        model = Model(self._auto_encoder)
+        detector = copy.deepcopy(self._detector)
+        detector.model_id = uuid.uuid4()
 
         # add new model to model pool
-        self._pool[model.model_id] = model
+        self._pool[detector.model_id] = detector
 
-        return model.model_id
+        return detector.model_id
 
     def similarity(self, x: torch.Tensor, model_id1: uuid.UUID, model_id2: uuid.UUID) -> float:
         """
@@ -157,7 +163,13 @@ class ModelPool:
         Returns
         -------
         """
-        self._pool[model_id].train(x)
+        model = self.get_model(model_id)
+        # Train the model
+        model.train(x)
+
+        # Update the last batch scores
+        scores = model.predict(x)
+        model.update_last_batch_scores(scores)
 
     def _merge_models(self, src_id: uuid.UUID, dst_id: uuid.UUID) -> None:
         """

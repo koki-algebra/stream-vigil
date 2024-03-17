@@ -1,15 +1,17 @@
 import torch
 
 from streamvigil import ARCUS
+from streamvigil.detectors import BasicDetector
 from tests.mock import MockAutoEncoder
 
 # Mock
 auto_encoder = MockAutoEncoder(input_dim=10, hidden_dim=8, latent_dim=5)
+detector = BasicDetector(auto_encoder)
 
 
 def test_init():
     x = torch.randn(5, 10)
-    arcus = ARCUS(auto_encoder)
+    arcus = ARCUS(detector)
 
     # Initialize ARCUS
     arcus.init(x)
@@ -22,7 +24,7 @@ def test_init():
 
 def test_run():
     x = torch.randn(5, 10)
-    arcus = ARCUS(auto_encoder)
+    arcus = ARCUS(detector)
     arcus.init(x)
 
     scores = arcus.run(x)

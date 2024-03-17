@@ -2,7 +2,7 @@ import uuid
 
 import torch
 
-from streamvigil.core import AutoEncoder, ModelPool
+from streamvigil.core import AnomalyDetector, ModelPool
 
 
 class ARCUS:
@@ -11,9 +11,9 @@ class ARCUS:
     """
 
     def __init__(
-        self, auto_encoder: AutoEncoder, reliability_threshold=0.95, similarity_threshold=0.8, max_model_num=5
+        self, detector: AnomalyDetector, reliability_threshold=0.95, similarity_threshold=0.8, max_model_num=5
     ) -> None:
-        self.pool = ModelPool(auto_encoder, reliability_threshold, similarity_threshold, max_model_num)
+        self.pool = ModelPool(detector, reliability_threshold, similarity_threshold, max_model_num)
         self._is_init = False
 
     def init(self, x: torch.Tensor) -> None:

@@ -3,15 +3,17 @@ import uuid
 import pytest
 import torch
 
-from streamvigil.core import Model, ModelPool
+from streamvigil.core import AnomalyDetector, ModelPool
+from streamvigil.detectors import BasicDetector
 from tests.mock import MockAutoEncoder
 
 # Mock
 auto_encoder = MockAutoEncoder(input_dim=10, hidden_dim=8, latent_dim=5)
+detector = BasicDetector(auto_encoder)
 
 
 def test_add_model():
-    pool = ModelPool(auto_encoder, max_model_num=3)
+    pool = ModelPool(detector, max_model_num=3)
     model_id = pool.add_model()
     assert model_id is not None
     assert isinstance(model_id, uuid.UUID)
@@ -26,7 +28,7 @@ def test_add_model():
 
 
 def test_is_drift():
-    pool = ModelPool(auto_encoder, reliability_threshold=0.8)
+    pool = ModelPool(detector, reliability_threshold=0.8)
     assert pool.is_drift() is True
 
     pool._reliability = 0.9
@@ -34,17 +36,17 @@ def test_is_drift():
 
 
 def test_get_models():
-    pool = ModelPool(auto_encoder)
+    pool = ModelPool(detector)
     pool.add_model()
     pool.add_model()
     pool.add_model()
     models = pool.get_models()
     assert len(models) == 3
-    assert isinstance(models[0], Model)
+    assert isinstance(models[0], AnomalyDetector)
 
 
 def test_similarity():
-    pool = ModelPool(auto_encoder)
+    pool = ModelPool(detector)
     x = torch.randn(5, 10)
     model_id1 = pool.add_model()
     model_id2 = pool.add_model()
@@ -53,7 +55,7 @@ def test_similarity():
 
 
 def test_merge_models():
-    pool = ModelPool(auto_encoder)
+    pool = ModelPool(detector)
     src_id = pool.add_model()
     dst_id = pool.add_model()
     pool.add_model()
@@ -64,7 +66,7 @@ def test_merge_models():
 
 
 def test_find_most_similar_model():
-    pool = ModelPool(auto_encoder, max_model_num=10)
+    pool = ModelPool(detector, max_model_num=10)
 
     x = torch.randn(5, 10)
 
@@ -88,7 +90,7 @@ def test_find_most_similar_model():
 
 
 def test_compress():
-    pool = ModelPool(auto_encoder, max_model_num=10)
+    pool = ModelPool(detector, max_model_num=10)
 
     x = torch.randn(5, 10)
 
@@ -101,7 +103,7 @@ def test_compress():
 
 
 def test_predict():
-    pool = ModelPool(auto_encoder)
+    pool = ModelPool(detector)
     pool.add_model()
     pool.add_model()
     pool.add_model()

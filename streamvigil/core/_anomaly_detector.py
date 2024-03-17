@@ -3,6 +3,7 @@ import uuid
 from abc import ABC, abstractmethod
 
 import torch
+from torch.optim import Adam, Optimizer
 
 from ._auto_encoder import AutoEncoder
 
@@ -34,6 +35,10 @@ class AnomalyDetector(ABC):
 
         return self._model_id
 
+    @model_id.setter
+    def model_id(self, v: uuid.UUID) -> None:
+        self._model_id = v
+
     @property
     def reliability(self) -> float:
         """
@@ -52,7 +57,7 @@ class AnomalyDetector(ABC):
             raise ValueError("Model reliability must be between 0.0 and 1.0")
         self._reliability = v
 
-    def _update_reliability(self, scores: torch.Tensor) -> None:
+    def update_reliability(self, scores: torch.Tensor) -> None:
         """
         Update model reliability based on Hoeffding's bound.
 
@@ -67,7 +72,7 @@ class AnomalyDetector(ABC):
         if scores.dim() != 1:
             raise ValueError("scores shape must be (1, n).")
 
-        if (scores < 0.0 or scores > 1.0).all().item():
+        if ((scores < 0.0) | (scores > 1.0)).all().item():
             raise ValueError("Anomaly score must be between 0.0 and 1.0")
 
         # Small value to avoid division by zero. Default: 1e-8
@@ -83,8 +88,8 @@ class AnomalyDetector(ABC):
 
         self._set_reliability(reliability)
 
-    def _update_last_batch_scores(self, scores: torch.Tensor) -> None:
-        if (scores < 0.0 or scores > 1.0).all().item():
+    def update_last_batch_scores(self, scores: torch.Tensor) -> None:
+        if ((scores < 0.0) | (scores > 1.0)).all().item():
             raise ValueError("Anomaly score must be between 0.0 and 1.0")
 
         self._last_max_score = scores.max().item()
@@ -106,6 +111,10 @@ class AnomalyDetector(ABC):
             Latent representation of `x`.
         """
         return self._auto_encoder.encode(x)
+
+    def _load_optimizer(self) -> Optimizer:
+        optimizer = Adam(self._auto_encoder.parameters())
+        return optimizer
 
     @abstractmethod
     def train(self, x: torch.Tensor) -> None:

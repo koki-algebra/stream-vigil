@@ -15,6 +15,7 @@ class BasicDetector(AnomalyDetector):
         self._loss_fn = MSELoss()
 
     def train(self, x: torch.Tensor) -> None:
+        x = x.to(self.device)
         logger = getLogger(__name__)
 
         # Optimizer
@@ -35,6 +36,7 @@ class BasicDetector(AnomalyDetector):
             optimizer.zero_grad()
 
     def predict(self, x: torch.Tensor) -> torch.Tensor:
+        x = x.to(self.device)
         x_pred: torch.Tensor = self._auto_encoder(x)
 
         # Square error

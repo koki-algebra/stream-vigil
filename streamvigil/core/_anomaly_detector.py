@@ -16,8 +16,10 @@ class AnomalyDetector(ABC):
 
     def __init__(self, auto_encoder: AutoEncoder) -> None:
         super().__init__()
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
         self._model_id = uuid.uuid4()
-        self._auto_encoder = auto_encoder
+        self._auto_encoder = auto_encoder.to(self.device)
         self._reliability = 0.0
 
         # Maximum anomaly score on the last batch used to update the model
@@ -26,6 +28,7 @@ class AnomalyDetector(ABC):
         self._last_min_score = 0.0
         # Average anomaly score on the last batch used to update the model
         self._last_mean_score = 0.0
+
 
     @property
     def model_id(self) -> uuid.UUID:
@@ -111,6 +114,7 @@ class AnomalyDetector(ABC):
         z : torch.Tensor
             Latent representation of `x`.
         """
+        x = x.to(self.device)
         return self._auto_encoder.encode(x)
 
     def _load_optimizer(self) -> Optimizer:

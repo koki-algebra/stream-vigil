@@ -32,9 +32,9 @@ dev-dependencies = [
 ]
 
 [tool.rye.scripts]
-fmt = { chain = ["ruff format ./streamvigil ./tests"]}
+fmt = { chain = ["ruff format ./streamvigil ./tests ./examples"]}
 lint = { chain = [
-    "ruff check --fix ./streamvigil ./tests",
+    "ruff check --fix ./streamvigil ./tests ./examples",
     "mypy ./streamvigil ./tests"
 ]}
 test = { chain = ["pytest ./tests"] }

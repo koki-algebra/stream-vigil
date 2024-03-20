@@ -1,9 +1,6 @@
 .PHONY: help
 .DEFAULT_GOAL := help
 
-run: ## Run Python Script
-	@rye run main
-
 fmt: ## Format python code
 	@rye run fmt
 

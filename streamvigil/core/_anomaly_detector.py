@@ -29,7 +29,6 @@ class AnomalyDetector(ABC):
         # Average anomaly score on the last batch used to update the model
         self._last_mean_score = 0.0
 
-
     @property
     def model_id(self) -> uuid.UUID:
         """

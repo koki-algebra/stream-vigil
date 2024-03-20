@@ -26,19 +26,35 @@ mypy-extensions==1.0.0
 networkx==3.2.1
     # via torch
 numpy==1.26.4
+    # via pandas
+    # via pandas-stubs
     # via streamvigil
 packaging==23.2
     # via pytest
+pandas==2.2.1
+    # via streamvigil
+pandas-stubs==2.2.1.240316
 pluggy==1.4.0
     # via pytest
 pytest==8.0.2
     # via pytest-mock
 pytest-mock==3.12.0
+python-dateutil==2.9.0.post0
+    # via pandas
+pytz==2024.1
+    # via pandas
+pyyaml==6.0.1
 ruff==0.3.0
+six==1.16.0
+    # via python-dateutil
 sympy==1.12
     # via torch
 torch==2.2.1
     # via streamvigil
+types-pytz==2024.1.0.20240203
+    # via pandas-stubs
 typing-extensions==4.10.0
     # via mypy
     # via torch
+tzdata==2024.1
+    # via pandas

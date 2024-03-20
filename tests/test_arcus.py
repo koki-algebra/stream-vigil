@@ -15,11 +15,11 @@ def test_init():
 
     # Initialize ARCUS
     arcus.init(x)
-    assert len(arcus.pool.get_models()) == 1
+    assert len(arcus._pool.get_models()) == 1
 
     # The model pool does not change even if you reinitialize it.
     arcus.init(x)
-    assert len(arcus.pool.get_models()) == 1
+    assert len(arcus._pool.get_models()) == 1
 
 
 def test_run():

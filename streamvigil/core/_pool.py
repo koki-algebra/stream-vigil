@@ -78,6 +78,9 @@ class ModelPool:
         anomaly_scores : torch.Tensor
             Anomaly scores.
         """
+        # Small value to avoid division by zero. Default: 1e-8
+        eps = 1e-8
+
         anomaly_scores = torch.zeros(x.shape[0])
         tmp = 1.0
 
@@ -89,7 +92,7 @@ class ModelPool:
             model.update_reliability(scores)
 
             # Standardized square error
-            scores = (scores - scores.mean()) / scores.std()
+            scores = (scores - scores.mean()) / (scores.std() + eps)
 
             anomaly_scores += scores * model.reliability
 

@@ -1,6 +1,7 @@
 import uuid
 
 import torch
+from logging import getLogger
 
 from streamvigil.core import AnomalyDetector, ModelPool
 
@@ -41,14 +42,20 @@ class ARCUS:
         scores : torch.Tensor
             Anomaly scores on the data matrix X.
         """
+        logger = getLogger(__name__)
+
         # Estimate the anomaly scores
         scores = self._pool.predict(x)
 
         if self._pool.is_drift():
+            logger.info("Concept drift detected!")
+
             # Add new model
             model_id = self._pool.add_model()
             # Train the new model
+            logger.info("Start training a new model...")
             self._pool.train(model_id, x)
+            logger.info("Completed training new model!")
 
             # Compress the model pool
             while self._pool.compress(x, model_id):

@@ -24,11 +24,12 @@ class BasicDetector(AnomalyDetector):
         # Training the model
         self._auto_encoder.train()
         for epoch in range(self._max_train_epochs):
-            logger.info("Epoch {}".format(epoch))
-
             # Compute prediction and loss
             x_pred: torch.Tensor = self._auto_encoder(x)
             loss: torch.Tensor = self._loss_fn(x_pred, x)
+
+            if epoch % 10 == 0:
+                logger.debug("epoch: {}, loss: {}".format(epoch, loss))
 
             # Backpropagation
             loss.backward()

@@ -7,11 +7,11 @@ import torch.nn as nn
 class AutoEncoder(ABC, nn.Module):
     @abstractmethod
     def encode(self, x: torch.Tensor) -> torch.Tensor:
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def decode(self, z: torch.Tensor) -> torch.Tensor:
-        pass
+        raise NotImplementedError
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.decode(self.encode(x))

@@ -128,4 +128,7 @@ class RSRAE(AnomalyDetector):
 
     def predict(self, x: torch.Tensor) -> torch.Tensor:
         x = x.to(self.device)
-        return x
+        x_pred: torch.Tensor = self._auto_encoder(x)
+        cos = nn.CosineSimilarity()
+
+        return (cos(x, x_pred) + 1) / 2

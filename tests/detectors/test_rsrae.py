@@ -32,3 +32,9 @@ def test_rsrae_train():
     rsrae = RSRAE(encoder_dims=[8, 16, 32, 64, 128], rsr_dim=4, decoder_dims=[4, 6, 8])
     x = torch.randn(256, 8)
     rsrae.train(x)
+
+
+def test_rsrae_predict():
+    rsrae = RSRAE(encoder_dims=[8, 16, 32, 64, 128], rsr_dim=4, decoder_dims=[4, 6, 8])
+    x = torch.randn(5, 8)
+    rsrae.predict(x)

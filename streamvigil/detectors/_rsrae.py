@@ -63,10 +63,20 @@ class _RSRAE(AutoEncoder):
 
 
 class RSRAE(AnomalyDetector):
-    def __init__(self, encoder_dims: List[int], decoder_dims: List[int], rsr_dim: int, max_train_epochs=100) -> None:
+    def __init__(
+        self,
+        encoder_dims: List[int],
+        decoder_dims: List[int],
+        rsr_dim: int,
+        max_train_epochs=100,
+        lambda1=1.0,
+        lambda2=1.0,
+    ) -> None:
         auto_encoder = _RSRAE(encoder_dims, decoder_dims, rsr_dim)
         super().__init__(auto_encoder)
         self._max_train_epochs = max_train_epochs
+        self._lambda1 = lambda1
+        self._lambda2 = lambda2
         self._auto_encoder = auto_encoder
         self._rsr_dim = rsr_dim
 
@@ -100,17 +110,17 @@ class RSRAE(AnomalyDetector):
             x_pred: torch.Tensor = self._auto_encoder(x)
 
             # Compute loss
-            ae_loss = self._reconstruct_loss(x, x_pred)
-            pca_loss = self._pca_loss(z)
-            proj_loss = self._project_loss()
+            loss = (
+                self._reconstruct_loss(x, x_pred)
+                + self._lambda1 * self._pca_loss(z)
+                + self._lambda2 * self._project_loss()
+            )
 
             if epoch % 10 == 0:
-                logger.debug("epoch: {}, loss: {}".format(epoch, ae_loss))
+                logger.debug("epoch: {}, loss: {}".format(epoch, loss))
 
             # Backpropagation
-            ae_loss.backward()
-            pca_loss.backward()
-            proj_loss.backward()
+            loss.backward()
             optimizer.step()
             optimizer.zero_grad()
             rsr_optimizer.step()

@@ -26,3 +26,9 @@ def test_rsrae_loss():
     rsrae._reconstruct_loss(x, x_pred)
     rsrae._pca_loss(z)
     rsrae._project_loss()
+
+
+def test_rsrae_train():
+    rsrae = RSRAE(encoder_dims=[8, 16, 32, 64, 128], rsr_dim=4, decoder_dims=[4, 6, 8])
+    x = torch.randn(256, 8)
+    rsrae.train(x)

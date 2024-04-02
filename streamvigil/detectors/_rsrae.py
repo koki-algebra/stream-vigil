@@ -11,7 +11,8 @@ from streamvigil.core import AnomalyDetector, AutoEncoder
 class RSR(nn.Module):
     def __init__(self, in_features: int, out_features: int) -> None:
         super().__init__()
-        self.A = nn.Parameter(torch.randn(in_features, out_features))
+        self.A = nn.Parameter(torch.zeros(in_features, out_features))
+        nn.init.xavier_uniform_(self.A)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return x.matmul(self.A)
@@ -82,7 +83,7 @@ class RSRAE(AnomalyDetector):
         return torch.norm(A.T.matmul(A) - E)
 
     def _load_rsr_optimizer(self) -> Optimizer:
-        return Adam(self._auto_encoder.rsr.parameters())
+        return Adam(self._auto_encoder.rsr.parameters(), lr=10 * self._learning_rate)
 
     def train(self, x: torch.Tensor) -> None:
         x = x.to(self.device)

@@ -14,9 +14,11 @@ class AnomalyDetector(ABC):
     Anomaly detector base class for model pool based methods.
     """
 
-    def __init__(self, auto_encoder: AutoEncoder) -> None:
+    def __init__(self, auto_encoder: AutoEncoder, learning_rate=1e-4) -> None:
         super().__init__()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        self._learning_rate = learning_rate
 
         self._model_id = uuid.uuid4()
         self._auto_encoder = auto_encoder.to(self.device)
@@ -117,7 +119,7 @@ class AnomalyDetector(ABC):
         return self._auto_encoder.encode(x)
 
     def _load_optimizer(self) -> Optimizer:
-        return Adam(self._auto_encoder.parameters())
+        return Adam(self._auto_encoder.parameters(), lr=self._learning_rate)
 
     @abstractmethod
     def train(self, x: torch.Tensor) -> None:

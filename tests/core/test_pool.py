@@ -4,11 +4,9 @@ import pytest
 import torch
 
 from streamvigil.core import AnomalyDetector, ModelPool
-from streamvigil.detectors import BasicDetector
-from tests.mock import MockAutoEncoder
+from streamvigil.detectors import BasicAutoEncoder, BasicDetector
 
-# Mock
-auto_encoder = MockAutoEncoder(input_dim=10, hidden_dim=8, latent_dim=5)
+auto_encoder = BasicAutoEncoder(encoder_dims=[10, 5, 3], decoder_dims=[3, 5, 10])
 detector = BasicDetector(auto_encoder)
 
 

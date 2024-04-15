@@ -18,26 +18,31 @@ def main():
     logger = getLogger(__name__)
 
     # Anomaly Detector
-    auto_encoder = BasicAutoEncoder(encoder_dims=[10, 8, 5], decoder_dims=[5, 8, 10], batch_norm=True)
+    auto_encoder = BasicAutoEncoder(
+        encoder_dims=[500, 450, 400, 350, 300, 250], decoder_dims=[250, 300, 350, 400, 450, 500], batch_norm=True
+    )
     detector = BasicDetector(auto_encoder)
 
     random_state = 42
 
     # Load dataset
-    train_data = ADBenchDataset("./data/11_donors.npz", train=True, random_state=random_state)
-    test_data = ADBenchDataset("./data/11_donors.npz", train=False, random_state=random_state)
+    train_data = ADBenchDataset("./data/9_census.npz", train=True, random_state=random_state)
+    test_data = ADBenchDataset("./data/9_census.npz", train=False, random_state=random_state)
 
     # DataLoader
-    train_loader = DataLoader(train_data, batch_size=128)
-    test_loader = DataLoader(test_data, batch_size=64)
+    train_loader = DataLoader(train_data, batch_size=512)
+    test_loader = DataLoader(test_data, batch_size=256)
 
     # Training
-    epochs = 5
+    epochs = 10
     logger.info("Start training the model...")
     for epoch in range(epochs):
         logger.info(f"Epoch: {epoch+1}")
         for batch, (X, _) in enumerate(train_loader):
-            detector.train(X)
+            loss = detector.train(X)
+
+            if batch % 100 == 0:
+                logger.info(f"Loss: {loss.item():>7f}")
     logger.info("Completed training the model!")
 
     # Evaluation

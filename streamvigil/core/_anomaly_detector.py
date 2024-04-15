@@ -122,7 +122,7 @@ class AnomalyDetector(ABC):
         return Adam(self._auto_encoder.parameters(), lr=self._learning_rate)
 
     @abstractmethod
-    def train(self, x: torch.Tensor) -> None:
+    def train(self, x: torch.Tensor) -> torch.Tensor:
         """
         Train the model with unsupervised learning.
 
@@ -130,6 +130,11 @@ class AnomalyDetector(ABC):
         ----------
         x : torch.Tensor
             Data matrix.
+
+        Returns
+        -------
+        loss : torch.Tensor
+            Training loss.
         """
         pass
 

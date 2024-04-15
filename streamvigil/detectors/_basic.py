@@ -43,7 +43,7 @@ class BasicDetector(AnomalyDetector):
         # Loss function
         self._criterion = MSELoss()
 
-    def train(self, x: torch.Tensor) -> None:
+    def train(self, x: torch.Tensor) -> torch.Tensor:
         x = x.to(self.device)
 
         # Optimizer
@@ -59,6 +59,8 @@ class BasicDetector(AnomalyDetector):
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
+
+        return loss
 
     def predict(self, x: torch.Tensor) -> torch.Tensor:
         self._auto_encoder.eval()

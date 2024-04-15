@@ -1,4 +1,3 @@
-from logging import getLogger
 from typing import List
 
 import torch
@@ -38,36 +37,32 @@ class BasicAutoEncoder(AutoEncoder):
 
 
 class BasicDetector(AnomalyDetector):
-    def __init__(self, auto_encoder: AutoEncoder, max_train_epochs=100) -> None:
+    def __init__(self, auto_encoder: AutoEncoder) -> None:
         super().__init__(auto_encoder)
-        self._max_train_epochs = max_train_epochs
 
         # Loss function
-        self._loss_fn = MSELoss()
+        self._criterion = MSELoss()
 
     def train(self, x: torch.Tensor) -> None:
         x = x.to(self.device)
-        logger = getLogger(__name__)
 
         # Optimizer
         optimizer = self._load_optimizer()
 
         # Training the model
         self._auto_encoder.train()
-        for epoch in range(self._max_train_epochs):
-            # Compute prediction and loss
-            x_pred: torch.Tensor = self._auto_encoder(x)
-            loss: torch.Tensor = self._loss_fn(x_pred, x)
+        # Compute prediction and loss
+        x_pred: torch.Tensor = self._auto_encoder(x)
+        loss: torch.Tensor = self._criterion(x_pred, x)
 
-            if epoch % 10 == 0:
-                logger.debug("epoch: {}, loss: {}".format(epoch, loss))
-
-            # Backpropagation
-            loss.backward()
-            optimizer.step()
-            optimizer.zero_grad()
+        # Backpropagation
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
 
     def predict(self, x: torch.Tensor) -> torch.Tensor:
+        self._auto_encoder.eval()
+
         x = x.to(self.device)
         x_pred: torch.Tensor = self._auto_encoder(x)
 

@@ -9,6 +9,7 @@ dependencies = [
     "torch>=2.2.1",
     "numpy>=1.26.4",
     "pandas>=2.2.1",
+    "scikit-learn>=1.4.2",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
@@ -28,7 +29,8 @@ dev-dependencies = [
     "pandas-stubs>=2.2.1.240316",
     "pyyaml>=6.0.1",
     "seaborn>=0.13.2",
-    "scikit-learn>=1.4.1.post1",
+    "scikit-learn>=1.4.2",
+    "torcheval>=0.0.7",
 ]
 
 [tool.rye.scripts]

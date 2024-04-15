@@ -4,11 +4,14 @@ import pytest
 import torch
 
 from streamvigil.core.utils import validate_anomaly_scores
-from streamvigil.detectors import BasicDetector
-from tests.mock import MockAutoEncoder
+from streamvigil.detectors import BasicAutoEncoder, BasicDetector
 
-# Mock
-auto_encoder = MockAutoEncoder(input_dim=10, hidden_dim=8, latent_dim=5)
+auto_encoder = BasicAutoEncoder(encoder_dims=[128, 64, 32, 16], decoder_dims=[16, 32, 64, 128], batch_norm=True)
+
+
+def test_auto_encoder_forward():
+    x = torch.randn(64, 128)
+    auto_encoder(x)
 
 
 def test_model_id():
@@ -32,7 +35,7 @@ def test_reliability():
 def test_update_reliability():
     detector = BasicDetector(auto_encoder)
 
-    valid_scores = torch.rand(10)
+    valid_scores = torch.rand(128)
     detector.update_reliability(valid_scores)
 
     invalid_scores = torch.Tensor([-1.0, 0.5, 0.2, 1.5, -0.2])
@@ -43,7 +46,7 @@ def test_update_reliability():
 def test_update_last_batch_scores():
     detector = BasicDetector(auto_encoder)
 
-    valid_scores = torch.rand(10)
+    valid_scores = torch.rand(128)
     detector.update_last_batch_scores(valid_scores)
 
     invalid_scores = torch.Tensor([-1.0, 0.5, 0.2, 1.5, -0.2])
@@ -53,6 +56,6 @@ def test_update_last_batch_scores():
 
 def test_predict():
     detector = BasicDetector(auto_encoder)
-    x = torch.randn(64, 10)
+    x = torch.randn(64, 128)
     scores = detector.predict(x)
     assert validate_anomaly_scores(scores)

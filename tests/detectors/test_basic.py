@@ -2,6 +2,7 @@ import uuid
 
 import pytest
 import torch
+import torch.nn as nn
 
 from streamvigil.core.utils import validate_anomaly_scores
 from streamvigil.detectors import BasicAutoEncoder, BasicDetector
@@ -10,8 +11,10 @@ auto_encoder = BasicAutoEncoder(encoder_dims=[128, 64, 32, 16], decoder_dims=[16
 
 
 def test_auto_encoder_forward():
-    x = torch.randn(64, 128)
-    auto_encoder(x)
+    X = torch.randn(64, 128)
+    X_pred = auto_encoder(X)
+    criterion = nn.MSELoss()
+    criterion(X, X_pred)
 
 
 def test_model_id():

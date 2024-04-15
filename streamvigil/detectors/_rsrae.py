@@ -1,4 +1,3 @@
-from logging import getLogger
 from typing import List, override
 
 import torch
@@ -68,13 +67,11 @@ class RSRAE(AnomalyDetector):
         encoder_dims: List[int],
         decoder_dims: List[int],
         rsr_dim: int,
-        max_train_epochs=100,
         lambda1=1.0,
         lambda2=1.0,
     ) -> None:
         auto_encoder = _RSRAE(encoder_dims, decoder_dims, rsr_dim)
         super().__init__(auto_encoder)
-        self._max_train_epochs = max_train_epochs
         self._lambda1 = lambda1
         self._lambda2 = lambda2
         self._auto_encoder = auto_encoder
@@ -95,7 +92,7 @@ class RSRAE(AnomalyDetector):
     def _load_rsr_optimizer(self) -> Optimizer:
         return Adam(self._auto_encoder.rsr.parameters(), lr=10 * self._learning_rate)
 
-    def train(self, x: torch.Tensor) -> None:
+    def train(self, x: torch.Tensor) -> torch.Tensor:
         x = x.to(self.device)
 
         # Optimizer
@@ -103,28 +100,23 @@ class RSRAE(AnomalyDetector):
         rsr_optimizer = self._load_rsr_optimizer()
 
         self._auto_encoder.train()
-        logger = getLogger(__name__)
 
-        for epoch in range(self._max_train_epochs):
-            z = self._auto_encoder.encode(x)
-            x_pred: torch.Tensor = self._auto_encoder(x)
+        z = self._auto_encoder.encode(x)
+        x_pred: torch.Tensor = self._auto_encoder(x)
 
-            # Compute loss
-            loss = (
-                self._reconstruct_loss(x, x_pred)
-                + self._lambda1 * self._pca_loss(z)
-                + self._lambda2 * self._project_loss()
-            )
+        # Compute loss
+        loss = (
+            self._reconstruct_loss(x, x_pred) + self._lambda1 * self._pca_loss(z) + self._lambda2 * self._project_loss()
+        )
 
-            if epoch % 10 == 0:
-                logger.debug("epoch: {}, loss: {}".format(epoch, loss))
+        # Backpropagation
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+        rsr_optimizer.step()
+        rsr_optimizer.zero_grad()
 
-            # Backpropagation
-            loss.backward()
-            optimizer.step()
-            optimizer.zero_grad()
-            rsr_optimizer.step()
-            rsr_optimizer.zero_grad()
+        return loss
 
     def predict(self, x: torch.Tensor) -> torch.Tensor:
         x = x.to(self.device)

@@ -49,9 +49,8 @@ numpy==1.26.4
 packaging==23.2
     # via matplotlib
     # via pytest
-pandas==2.2.1
+pandas==2.2.2
     # via seaborn
-    # via streamvigil
 pandas-stubs==2.2.1.240316
 pillow==10.2.0
     # via matplotlib

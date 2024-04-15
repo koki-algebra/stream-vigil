@@ -8,7 +8,6 @@ authors = [
 dependencies = [
     "torch>=2.2.1",
     "numpy>=1.26.4",
-    "pandas>=2.2.1",
     "scikit-learn>=1.4.2",
 ]
 readme = "README.md"
@@ -26,10 +25,10 @@ dev-dependencies = [
     "ruff>=0.3.0",
     "mypy>=1.8.0",
     "pytest>=8.0.2",
-    "pandas-stubs>=2.2.1.240316",
     "pyyaml>=6.0.1",
+    "pandas>=2.2.2",
+    "pandas-stubs>=2.2.1.240316",
     "seaborn>=0.13.2",
-    "scikit-learn>=1.4.2",
     "torcheval>=0.0.7",
 ]
 

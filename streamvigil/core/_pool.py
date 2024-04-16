@@ -23,9 +23,7 @@ class ModelPool:
         This threshold must be between 0.0 and 1.0.
     """
 
-    def __init__(
-        self, detector: AnomalyDetector, reliability_threshold=0.95, similarity_threshold=0.8, max_model_num=5
-    ) -> None:
+    def __init__(self, detector: AnomalyDetector, reliability_threshold=0.95, similarity_threshold=0.8) -> None:
         if reliability_threshold < 0.0 or reliability_threshold > 1.0:
             raise ValueError("A model pool reliability threshold must be between 0.0 and 1.0")
         if similarity_threshold < 0.0 or similarity_threshold > 1.0:
@@ -33,7 +31,6 @@ class ModelPool:
 
         self._reliability_threshold = reliability_threshold
         self._similarity_threshold = similarity_threshold
-        self._max_model_num = max_model_num
         self._detector = detector
 
         # model pool reliability
@@ -106,7 +103,6 @@ class ModelPool:
     def add_model(self) -> uuid.UUID:
         """
         Add a newly initialized model.
-        You cannot add more models than the maximum number of models.
 
         Parameters
         ----------
@@ -116,10 +112,6 @@ class ModelPool:
         model_id : uuid.UUID
             ID of newly added model.
         """
-
-        if len(self.get_models()) >= self._max_model_num:
-            raise ValueError("The maximum number of models in the model pool is {}".format(self._max_model_num))
-
         # initialize new model
         detector = copy.deepcopy(self._detector)
         detector.model_id = uuid.uuid4()

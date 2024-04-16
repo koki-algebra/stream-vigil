@@ -11,7 +11,7 @@ detector = BasicDetector(auto_encoder)
 
 
 def test_add_model():
-    pool = ModelPool(detector, max_model_num=3)
+    pool = ModelPool(detector)
     model_id = pool.add_model()
     assert model_id is not None
     assert isinstance(model_id, uuid.UUID)
@@ -19,10 +19,6 @@ def test_add_model():
     pool.add_model()
     pool.add_model()
     assert len(pool._pool) == 3
-
-    # Exceed max number of models
-    with pytest.raises(ValueError):
-        pool.add_model()
 
 
 def test_is_drift():
@@ -64,7 +60,7 @@ def test_merge_models():
 
 
 def test_find_most_similar_model():
-    pool = ModelPool(detector, max_model_num=10)
+    pool = ModelPool(detector)
 
     x = torch.randn(5, 10)
 
@@ -88,7 +84,7 @@ def test_find_most_similar_model():
 
 
 def test_compress():
-    pool = ModelPool(detector, max_model_num=10)
+    pool = ModelPool(detector)
 
     x = torch.randn(5, 10)
 

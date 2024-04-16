@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 from torcheval.metrics import BinaryAUROC
 from yaml import safe_load
 
-from streamvigil import ADBenchDataset
+from streamvigil import ARCUS, ADBenchDataset
 from streamvigil.detectors import BasicAutoEncoder, BasicDetector
 
 
@@ -25,44 +25,34 @@ def main():
     )
     detector = BasicDetector(auto_encoder)
 
+    arcus = ARCUS(detector, max_epochs=20)
+
     random_state = 42
 
     # Load dataset
-    train_data = ADBenchDataset(
+    data = ADBenchDataset(
         "./data/9_census.npz",
         train=True,
-        random_state=random_state,
-    )
-    test_data = ADBenchDataset(
-        "./data/9_census.npz",
-        train=False,
+        test_size=0.01,
         random_state=random_state,
     )
 
     # DataLoader
-    train_loader = DataLoader(train_data, batch_size=512)
-    test_loader = DataLoader(test_data, batch_size=256)
+    loader = DataLoader(data, batch_size=1024)
 
-    # Training
-    epochs = 10
-    logger.info("Start training the model...")
-    for epoch in range(epochs):
-        logger.info(f"Epoch: {epoch+1}")
-        for batch, (X, _) in enumerate(train_loader):
-            loss = detector.train(X)
+    # Initialize model pool
+    logger.info("Start initializing model pool...")
+    X, _ = next(iter(loader))
+    arcus.init(X)
+    logger.info("Completed initializing model pool!")
 
-            if batch % 100 == 0:
-                logger.info(f"Loss: {loss.item():>7f}")
-    logger.info("Completed training the model!")
-
-    # Evaluation
-    logger.info("Start evaluating the model...")
-
+    # ARCUS simulation
     all_scores = []
     all_labels = []
 
-    for X, y in test_loader:
-        scores = detector.predict(X)
+    logger.info("Start ARCUS simulation...")
+    for X, y in loader:
+        scores = arcus.run(X)
         all_scores.append(scores)
         all_labels.append(y)
 
@@ -74,7 +64,7 @@ def main():
     metrics.update(all_scores, all_labels)
     logger.info(f"AUROC Score: {metrics.compute()}")
 
-    logger.info("Completed the evaluation of the model!")
+    logger.info("Completed ARCUS simulation!")
 
 
 if __name__ == "__main__":

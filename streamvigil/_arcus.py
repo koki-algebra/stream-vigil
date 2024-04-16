@@ -1,7 +1,7 @@
 import uuid
+from logging import getLogger
 
 import torch
-from logging import getLogger
 
 from streamvigil.core import AnomalyDetector, ModelPool
 
@@ -12,10 +12,16 @@ class ARCUS:
     """
 
     def __init__(
-        self, detector: AnomalyDetector, reliability_threshold=0.95, similarity_threshold=0.8, max_model_num=5
+        self,
+        detector: AnomalyDetector,
+        reliability_threshold=0.95,
+        similarity_threshold=0.8,
+        max_model_num=5,
+        max_epochs=10,
     ) -> None:
         self._pool = ModelPool(detector, reliability_threshold, similarity_threshold, max_model_num)
         self._is_init = False
+        self._max_epochs = max_epochs
 
     def init(self, x: torch.Tensor) -> None:
         if self._is_init:
@@ -54,7 +60,9 @@ class ARCUS:
             model_id = self._pool.add_model()
             # Train the new model
             logger.info("Start training a new model...")
-            self._pool.train(model_id, x)
+            for _ in range(self._max_epochs):
+                loss = self._pool.train(model_id, x)
+                logger.info(f"loss: {loss.item():>7f}")
             logger.info("Completed training new model!")
 
             # Compress the model pool
@@ -64,7 +72,11 @@ class ARCUS:
             # Find the most reliable model in the model pool
             model_id = self._find_most_reliable_model()
             # Train the model
-            self._pool.train(model_id, x)
+            logger.info(f"Start training model with id {model_id}...")
+            for _ in range(self._max_epochs):
+                loss = self._pool.train(model_id, x)
+                logger.info(f"loss: {loss.item():>7f}")
+            logger.info(f"Completed training model with id {model_id}!")
 
         return scores
 

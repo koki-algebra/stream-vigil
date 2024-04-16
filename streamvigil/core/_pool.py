@@ -151,7 +151,7 @@ class ModelPool:
 
         return linear_CKA(z1, z2).item()
 
-    def train(self, model_id: uuid.UUID, x: torch.Tensor) -> None:
+    def train(self, model_id: uuid.UUID, x: torch.Tensor) -> torch.Tensor:
         """
         Train the model with `model_id` with data matrix `x`
 
@@ -161,18 +161,22 @@ class ModelPool:
             ID of the model to be trained.
 
         x : torch.Tensor
-            Data matrix
+            Data matrix.
 
         Returns
         -------
+        loss : torch.Tensor
+            Training loss.
         """
         model = self.get_model(model_id)
         # Train the model
-        model.train(x)
+        loss = model.train(x)
 
         # Update the last batch scores
         scores = model.predict(x)
         model.update_last_batch_scores(scores)
+
+        return loss
 
     def _merge_models(self, src_id: uuid.UUID, dst_id: uuid.UUID) -> None:
         """

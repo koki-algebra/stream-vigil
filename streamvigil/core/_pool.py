@@ -168,19 +168,29 @@ class ModelPool:
         scores = model.predict(x)
         model.update_last_batch_scores(scores)
 
+        # Increment the number of batches used for training
+        model.num_batches += 1
+
         return loss
 
     def _merge_models(self, src_id: uuid.UUID, dst_id: uuid.UUID) -> None:
         """
         Merge source model into destination model.
         """
+        src_model = self.get_model(src_id)
+        dst_model = self.get_model(dst_id)
+
         # Weghts
         w1 = 0.5
         w2 = 0.5
+        num_batches = src_model.num_batches + dst_model.num_batches
+        if num_batches != 0:
+            w1 = src_model.num_batches / num_batches
+            w2 = dst_model.num_batches / num_batches
 
         # Model parameters
-        src_params = self.get_model(src_id)._auto_encoder.state_dict()
-        dst_params = self.get_model(dst_id)._auto_encoder.state_dict()
+        src_params = src_model._auto_encoder.state_dict()
+        dst_params = dst_model._auto_encoder.state_dict()
 
         # Merge parameters
         for key in src_params:

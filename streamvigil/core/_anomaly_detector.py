@@ -24,6 +24,9 @@ class AnomalyDetector(ABC):
         self._auto_encoder = auto_encoder.to(self.device)
         self._reliability = 0.0
 
+        # The number of batches used to train the model
+        self._num_batches = 0
+
         # Maximum anomaly score on the last batch used to update the model
         self._last_max_score = 0.0
         # Minimum anomaly score on the last batch used to update the model
@@ -61,6 +64,19 @@ class AnomalyDetector(ABC):
         if v < 0.0 or v > 1.0:
             raise ValueError("Model reliability must be between 0.0 and 1.0")
         self._reliability = v
+
+    @property
+    def num_batches(self) -> int:
+        """
+        The number of batches used for training.
+        """
+        return self._num_batches
+
+    @num_batches.setter
+    def num_batches(self, v: int) -> None:
+        if v < 0:
+            raise ValueError("The number of batches used for training must be non-negative")
+        self._num_batches = v
 
     def update_reliability(self, scores: torch.Tensor) -> None:
         """

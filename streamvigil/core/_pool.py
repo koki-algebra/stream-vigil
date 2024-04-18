@@ -32,6 +32,7 @@ class ModelPool:
         self._reliability_threshold = reliability_threshold
         self._similarity_threshold = similarity_threshold
         self._detector = detector
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # model pool reliability
         self._reliability = 0.0
@@ -78,7 +79,9 @@ class ModelPool:
         # Small value to avoid division by zero. Default: 1e-8
         eps = 1e-8
 
-        anomaly_scores = torch.zeros(x.shape[0])
+        x = x.to(self.device)
+
+        anomaly_scores = torch.zeros(x.shape[0]).to(self.device)
         tmp = 1.0
 
         for model in self.get_models():
@@ -141,7 +144,7 @@ class ModelPool:
         z1 = self.get_model(model_id1).encode(x)
         z2 = self.get_model(model_id2).encode(x)
 
-        return linear_CKA(z1, z2).item()
+        return linear_CKA(z1, z2, self.device).item()
 
     def train(self, model_id: uuid.UUID, x: torch.Tensor) -> torch.Tensor:
         """

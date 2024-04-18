@@ -37,8 +37,8 @@ class BasicAutoEncoder(AutoEncoder):
 
 
 class BasicDetector(AnomalyDetector):
-    def __init__(self, auto_encoder: AutoEncoder) -> None:
-        super().__init__(auto_encoder)
+    def __init__(self, auto_encoder: AutoEncoder, learning_rate=0.0001) -> None:
+        super().__init__(auto_encoder, learning_rate)
 
         # Loss function
         self._criterion = MSELoss()

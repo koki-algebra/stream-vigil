@@ -1,7 +1,6 @@
 from logging import getLogger
 from logging.config import dictConfig
 
-import torch
 from torch.utils.data import DataLoader
 from torcheval.metrics import BinaryAUROC
 from yaml import safe_load
@@ -56,22 +55,14 @@ def main():
     logger.info("Completed training the model!")
 
     # Evaluation
+    metrics = BinaryAUROC()
     logger.info("Start evaluating the model...")
-
-    all_scores = []
-    all_labels = []
 
     for X, y in test_loader:
         scores = detector.predict(X)
-        all_scores.append(scores)
-        all_labels.append(y)
+        metrics.update(scores, y)
 
-    all_scores = torch.cat(all_scores, dim=0)
-    all_labels = torch.cat(all_labels, dim=0)
-
-    # Compute AUROC score
-    metrics = BinaryAUROC()
-    metrics.update(all_scores, all_labels)
+    # Compute AUROC score   
     logger.info(f"AUROC Score: {metrics.compute()}")
 
     logger.info("Completed the evaluation of the model!")

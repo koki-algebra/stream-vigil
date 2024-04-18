@@ -1,7 +1,6 @@
 from logging import getLogger
 from logging.config import dictConfig
 
-import torch
 from torch.utils.data import DataLoader
 from torcheval.metrics import BinaryAUROC
 from yaml import safe_load
@@ -47,21 +46,14 @@ def main():
     logger.info("Completed initializing model pool!")
 
     # ARCUS simulation
-    all_scores = []
-    all_labels = []
+    metrics = BinaryAUROC()
 
     logger.info("Start ARCUS simulation...")
     for X, y in loader:
         scores = arcus.run(X)
-        all_scores.append(scores)
-        all_labels.append(y)
-
-    all_scores = torch.cat(all_scores, dim=0)
-    all_labels = torch.cat(all_labels, dim=0)
+        metrics.update(scores, y)
 
     # Compute AUROC score
-    metrics = BinaryAUROC()
-    metrics.update(all_scores, all_labels)
     logger.info(f"AUROC Score: {metrics.compute()}")
 
     logger.info("Completed ARCUS simulation!")

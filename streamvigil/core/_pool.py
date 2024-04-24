@@ -81,7 +81,7 @@ class ModelPool:
 
         x = x.to(self.device)
 
-        anomaly_scores = torch.zeros(x.shape[0]).to(self.device)
+        anomaly_scores = torch.zeros(x.shape[0], device=self.device)
         tmp = 1.0
 
         for model in self.get_models():

@@ -14,7 +14,7 @@ class RSR(nn.Module):
         nn.init.xavier_uniform_(self.A)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return x.matmul(self.A)
+        return x.matmul(self.A.to(x.device))
 
 
 class _RSRAE(AutoEncoder):

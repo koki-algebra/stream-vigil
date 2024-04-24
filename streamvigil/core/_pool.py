@@ -144,7 +144,7 @@ class ModelPool:
         z1 = self.get_model(model_id1).encode(x)
         z2 = self.get_model(model_id2).encode(x)
 
-        return linear_CKA(z1, z2, self.device).item()
+        return linear_CKA(z1, z2).item()
 
     def train(self, model_id: uuid.UUID, x: torch.Tensor) -> torch.Tensor:
         """

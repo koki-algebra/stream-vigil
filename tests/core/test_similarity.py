@@ -10,11 +10,11 @@ def test_centering():
     b = 2.0
     c = 1.0
     d = 2.0
-    x = torch.tensor([[a, b], [c, d]]).to(device)
+    x = torch.tensor([[a, b], [c, d]], device=device)
 
-    got = _centering(x, device)
+    got = _centering(x)
 
-    exp = torch.tensor([[a - c - b + d, -(a - c - b + d)], [-(a - c - b + d), a - c - b + d]]).to(device) / 4
+    exp = torch.tensor([[a - c - b + d, -(a - c - b + d)], [-(a - c - b + d), a - c - b + d]], device=device) / 4
 
     torch.testing.assert_close(exp, got)
 
@@ -28,28 +28,28 @@ def test_rbf():
 
 
 def test_kernel_HSIC():
-    x1 = torch.randn(100, 64).to(device)
-    x2 = torch.randn(100, 64).to(device)
-    got = _kernel_HSIC(x1, x2, device)
+    x1 = torch.randn(100, 64, device=device)
+    x2 = torch.randn(100, 64, device=device)
+    got = _kernel_HSIC(x1, x2)
     assert got.dim() == 0
 
 
 def test_linear_HSIC():
-    x1 = torch.randn(100, 64).to(device)
-    x2 = torch.randn(100, 64).to(device)
-    got = _linear_HSIC(x1, x2, device)
+    x1 = torch.randn(100, 64, device=device)
+    x2 = torch.randn(100, 64, device=device)
+    got = _linear_HSIC(x1, x2)
     assert got.dim() == 0
 
 
 def test_linear_CKA():
-    x1 = torch.randn(100, 64).to(device)
-    x2 = torch.randn(100, 64).to(device)
-    got = linear_CKA(x1, x2, device)
+    x1 = torch.randn(100, 64, device=device)
+    x2 = torch.randn(100, 64, device=device)
+    got = linear_CKA(x1, x2)
     assert got.dim() == 0
 
 
 def test_kernel_CKA():
-    x1 = torch.randn(100, 64).to(device)
-    x2 = torch.randn(100, 64).to(device)
-    got = kernel_CKA(x1, x2, device)
+    x1 = torch.randn(100, 64, device=device)
+    x2 = torch.randn(100, 64, device=device)
+    got = kernel_CKA(x1, x2)
     assert got.dim() == 0

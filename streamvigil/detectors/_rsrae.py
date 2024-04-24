@@ -82,16 +82,16 @@ class RSRAE(AnomalyDetector):
         self._rsr_dim = rsr_dim
 
     def _reconstruct_loss(self, x: torch.Tensor, x_pred: torch.Tensor) -> torch.Tensor:
-        return (x - x_pred).norm(dim=1).sum()
+        return (x - x_pred).norm(p=1, dim=1).mean()
 
     def _pca_loss(self, z: torch.Tensor) -> torch.Tensor:
         A = self._auto_encoder.rsr.A
-        return (z - z.matmul(A).matmul(A.T)).norm(dim=1).sum()
+        return (z - z.matmul(A).matmul(A.T)).norm(p=1, dim=1).mean()
 
     def _project_loss(self) -> torch.Tensor:
         A = self._auto_encoder.rsr.A
-        E = torch.eye(self._rsr_dim)
-        return torch.norm(A.T.matmul(A) - E)
+        E = torch.eye(self._rsr_dim, device=A.device)
+        return (A.T.matmul(A) - E).norm().square()
 
     def _load_rsr_optimizer(self) -> Optimizer:
         return Adam(self._auto_encoder.rsr.parameters(), lr=10 * self._learning_rate)

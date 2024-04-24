@@ -30,12 +30,13 @@ dev-dependencies = [
     "pandas-stubs>=2.2.1.240316",
     "seaborn>=0.13.2",
     "torcheval>=0.0.7",
+    "ipykernel>=6.29.4",
 ]
 
 [tool.rye.scripts]
-fmt = { chain = ["ruff format ./streamvigil ./tests ./examples"]}
+fmt = { chain = ["ruff format ./streamvigil ./tests"]}
 lint = { chain = [
-    "ruff check --fix ./streamvigil ./tests ./examples",
+    "ruff check --fix ./streamvigil ./tests",
     "mypy ./streamvigil ./tests"
 ]}
 test = { chain = ["pytest ./tests"] }

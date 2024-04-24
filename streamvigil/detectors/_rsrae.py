@@ -22,31 +22,29 @@ class _RSRAE(AutoEncoder):
     Robust Subspace Recovery Auto Encoder (RSRAE)
     """
 
-    def __init__(self, encoder_dims: List[int], decoder_dims: List[int], rsr_dim: int) -> None:
+    def __init__(self, encoder_dims: List[int], decoder_dims: List[int], rsr_dim: int, batch_norm=False) -> None:
         super().__init__()
-
-        input_dim = encoder_dims[0]
 
         # Encoder
         self.encoder = nn.Sequential()
-        for output_dim in encoder_dims:
+        for i, (input_dim, output_dim) in enumerate(zip(encoder_dims[:-1], encoder_dims[1:])):
             self.encoder.append(nn.Linear(input_dim, output_dim))
-            self.encoder.append(nn.ReLU())
-            self.encoder.append(nn.BatchNorm1d(output_dim))
-            input_dim = output_dim
+            if i != len(encoder_dims) - 2:
+                if batch_norm:
+                    self.encoder.append(nn.BatchNorm1d(output_dim))
+                self.encoder.append(nn.ReLU())
 
         # Robust Subspace Recovery layer (RSR layer)
         self.rsr = RSR(encoder_dims[-1], rsr_dim)
 
         # Decoder
-        input_dim = rsr_dim
         self.decoder = nn.Sequential()
-        for i, output_dim in enumerate(decoder_dims):
+        for i, (input_dim, output_dim) in enumerate(zip(decoder_dims[:-1], decoder_dims[1:])):
             self.decoder.append(nn.Linear(input_dim, output_dim))
-            if i != len(decoder_dims) - 1:
+            if i != len(decoder_dims) - 2:
+                if batch_norm:
+                    self.decoder.append(nn.BatchNorm1d(output_dim))
                 self.decoder.append(nn.ReLU())
-                self.decoder.append(nn.BatchNorm1d(output_dim))
-            input_dim = output_dim
 
     def encode(self, x: torch.Tensor) -> torch.Tensor:
         return self.encoder(x)
@@ -67,32 +65,32 @@ class RSRAE(AnomalyDetector):
         encoder_dims: List[int],
         decoder_dims: List[int],
         rsr_dim: int,
+        batch_norm=False,
         lambda1=1.0,
         lambda2=1.0,
-        learning_rate=0.0001,
     ) -> None:
-        auto_encoder = _RSRAE(encoder_dims, decoder_dims, rsr_dim)
-        super().__init__(auto_encoder, learning_rate)
-
+        auto_encoder = _RSRAE(
+            encoder_dims,
+            decoder_dims,
+            rsr_dim,
+            batch_norm=batch_norm,
+        )
+        super().__init__(auto_encoder)
         self._lambda1 = lambda1
         self._lambda2 = lambda2
         self._auto_encoder = auto_encoder
         self._rsr_dim = rsr_dim
 
     def _reconstruct_loss(self, x: torch.Tensor, x_pred: torch.Tensor) -> torch.Tensor:
-        x = x.to(self.device)
-        x_pred = x_pred.to(self.device)
-
         return (x - x_pred).norm(dim=1).sum()
 
     def _pca_loss(self, z: torch.Tensor) -> torch.Tensor:
-        z = z.to(self.device)
-        A = self._auto_encoder.rsr.A.to(self.device)
+        A = self._auto_encoder.rsr.A
         return (z - z.matmul(A).matmul(A.T)).norm(dim=1).sum()
 
     def _project_loss(self) -> torch.Tensor:
-        A = self._auto_encoder.rsr.A.to(self.device)
-        E = torch.eye(self._rsr_dim).to(self.device)
+        A = self._auto_encoder.rsr.A
+        E = torch.eye(self._rsr_dim)
         return torch.norm(A.T.matmul(A) - E)
 
     def _load_rsr_optimizer(self) -> Optimizer:

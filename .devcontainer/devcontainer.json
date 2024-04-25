@@ -4,16 +4,15 @@
 		"context": ".",
 		"dockerfile": "Dockerfile"
 	},
-	// If you want to use GPU, uncomment the following
-	// "runArgs": [
-	// 	"--gpus",
-	// 	"all"
-	// ],
-	// "features": {
-	// 	"ghcr.io/devcontainers/features/nvidia-cuda": {
-	// 		"cudaVersion": 11.8
-	// 	}
-	// },
+	"runArgs": [
+		"--gpus",
+		"all"
+	],
+	"features": {
+		"ghcr.io/devcontainers/features/nvidia-cuda": {
+			"cudaVersion": 12.1
+		}
+	},
 	"onCreateCommand": "rye config --set-bool behavior.use-uv=true && rye sync",
 	"postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
 	"customizations": {

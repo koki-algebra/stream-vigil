@@ -26,25 +26,35 @@ class _RSRAE(AutoEncoder):
         super().__init__()
 
         # Encoder
-        self.encoder = nn.Sequential()
-        for i, (input_dim, output_dim) in enumerate(zip(encoder_dims[:-1], encoder_dims[1:])):
-            self.encoder.append(nn.Linear(input_dim, output_dim))
-            if i != len(encoder_dims) - 2:
-                if batch_norm:
-                    self.encoder.append(nn.BatchNorm1d(output_dim))
-                self.encoder.append(nn.ReLU())
+        self.encoder = self._build_network(encoder_dims, batch_norm)
 
         # Robust Subspace Recovery layer (RSR layer)
         self.rsr = RSR(encoder_dims[-1], rsr_dim)
 
         # Decoder
-        self.decoder = nn.Sequential()
-        for i, (input_dim, output_dim) in enumerate(zip(decoder_dims[:-1], decoder_dims[1:])):
-            self.decoder.append(nn.Linear(input_dim, output_dim))
-            if i != len(decoder_dims) - 2:
+        self.decoder = self._build_network(decoder_dims, batch_norm)
+
+        # Register forward hook
+        self._latent_value: torch.Tensor | None = None
+
+        def hook(model: nn.Module, input: torch.Tensor, output: torch.Tensor):
+            self._latent_value = output.detach()
+
+        self.encoder[-1].register_forward_hook(hook)
+
+    def _build_network(self, dims: List[int], batch_norm=False):
+        network = nn.Sequential()
+        for i, (input_dim, output_dim) in enumerate(zip(dims[:-1], dims[1:])):
+            network.append(nn.Linear(input_dim, output_dim))
+            if i != len(dims) - 2:
                 if batch_norm:
-                    self.decoder.append(nn.BatchNorm1d(output_dim))
-                self.decoder.append(nn.ReLU())
+                    network.append(nn.BatchNorm1d(output_dim))
+                network.append(nn.ReLU())
+
+        return network
+
+    def get_latent(self) -> torch.Tensor | None:
+        return self._latent_value
 
     def encode(self, x: torch.Tensor) -> torch.Tensor:
         return self.encoder(x)
@@ -86,6 +96,7 @@ class RSRAE(AnomalyDetector):
 
     def _pca_loss(self, z: torch.Tensor) -> torch.Tensor:
         A = self._auto_encoder.rsr.A
+        z = z.to(A.device)
         return (z - z.matmul(A).matmul(A.T)).norm(p=1, dim=1).mean()
 
     def _project_loss(self) -> torch.Tensor:
@@ -105,8 +116,8 @@ class RSRAE(AnomalyDetector):
 
         self._auto_encoder.train()
 
-        z = self._auto_encoder.encode(x)
         x_pred: torch.Tensor = self._auto_encoder(x)
+        z = self._auto_encoder.get_latent()
 
         # Compute loss
         loss = (

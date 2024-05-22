@@ -11,23 +11,20 @@ class BasicAutoEncoder(AutoEncoder):
     def __init__(self, encoder_dims: List[int], decoder_dims: List[int], batch_norm=False) -> None:
         super().__init__()
 
-        # Encoder
-        self.encoder = nn.Sequential()
-        for i, (input_dim, output_dim) in enumerate(zip(encoder_dims[:-1], encoder_dims[1:])):
-            self.encoder.append(nn.Linear(input_dim, output_dim))
-            if i != len(encoder_dims) - 2:
-                if batch_norm:
-                    self.encoder.append(nn.BatchNorm1d(output_dim))
-                self.encoder.append(nn.ReLU())
+        # Build network
+        self.encoder = self._build_network(encoder_dims, batch_norm)
+        self.decoder = self._build_network(decoder_dims, batch_norm)
 
-        # Decoder
-        self.decoder = nn.Sequential()
-        for i, (input_dim, output_dim) in enumerate(zip(decoder_dims[:-1], decoder_dims[1:])):
-            self.decoder.append(nn.Linear(input_dim, output_dim))
-            if i != len(decoder_dims) - 2:
+    def _build_network(self, dims: List[int], batch_norm=False):
+        network = nn.Sequential()
+        for i, (input_dim, output_dim) in enumerate(zip(dims[:-1], dims[1:])):
+            network.append(nn.Linear(input_dim, output_dim))
+            if i != len(dims) - 2:
                 if batch_norm:
-                    self.decoder.append(nn.BatchNorm1d(output_dim))
-                self.decoder.append(nn.ReLU())
+                    network.append(nn.BatchNorm1d(output_dim))
+                network.append(nn.ReLU())
+
+        return network
 
     def encode(self, x: torch.Tensor) -> torch.Tensor:
         return self.encoder(x)

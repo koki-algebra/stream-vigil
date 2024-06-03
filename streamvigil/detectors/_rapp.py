@@ -1,7 +1,9 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import torch
 import torch.nn as nn
+
+from streamvigil.core import AnomalyDetector
 
 from ._basic import BasicAutoEncoder
 
@@ -58,3 +60,83 @@ class _RAPP(BasicAutoEncoder):
 
     def get_latent(self) -> torch.Tensor | None:
         return self._encoder_activations.get(ENCODER_LAST_LAYER)
+
+
+class RAPP(AnomalyDetector):
+    def __init__(
+        self,
+        encoder_dims: List[int],
+        decoder_dims: List[int],
+        batch_norm=False,
+        learning_rate=0.0001,
+    ) -> None:
+        auto_encoder = _RAPP(
+            encoder_dims,
+            decoder_dims,
+            batch_norm=batch_norm,
+        )
+        super().__init__(auto_encoder, learning_rate)
+        self._auto_encoder = auto_encoder
+
+        self._criterion = nn.MSELoss()
+
+    def _sap(self, h_pairs: List[Tuple[torch.Tensor, torch.Tensor]]) -> torch.Tensor:
+        """
+        Simple Aggregation along Pathway (SAP)
+
+        Returns
+        -------
+        score : float
+            Novelty score
+        """
+        if len(h_pairs) == 0:
+            raise ValueError("h_pairs must have length greater than or equal to 1")
+        score = torch.zero_(h_pairs[0][0])
+        for h, h_pred in h_pairs:
+            score += (h - h_pred).norm(dim=1).square()
+        return score
+
+    def _nap(self, h_pairs: List[Tuple[torch.Tensor, torch.Tensor]]) -> torch.Tensor:
+        """
+        Normalized Aggregation along Pathway (NAP)
+        """
+
+        for h, h_pred in h_pairs:
+            d = h - h_pred
+            d = d - d.mean(dim=0)
+
+        _, s, v = torch.linalg.svd(d, full_matrices=False)
+        s[s == 0] = 1.0
+
+        return d.matmul(v.T).matmul(torch.linalg.inv(s.diag())).norm(dim=1).square()
+
+    def train(self, x: torch.Tensor) -> torch.Tensor:
+        x = x.to(self.device)
+        optimizer = self._load_optimizer()
+        self._auto_encoder.train()
+
+        x_pred: torch.Tensor = self._auto_encoder(x)
+
+        loss: torch.Tensor = self._criterion(x, x_pred)
+
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+
+        return loss
+
+    def predict(self, x: torch.Tensor) -> torch.Tensor:
+        x = x.to(self.device)
+        x_pred: torch.Tensor = self._auto_encoder(x)
+
+        x_activations = self._auto_encoder.get_encoder_activations().copy()
+
+        self._auto_encoder(x_pred)
+
+        x_pred_activations = self._auto_encoder.get_encoder_activations().copy()
+
+        h_pairs: List[Tuple[torch.Tensor, torch.Tensor]] = []
+        for h, h_pred in zip(list(x_activations.values()), list(x_pred_activations.values())):
+            h_pairs.append((h, h_pred))
+
+        return self._nap(h_pairs)

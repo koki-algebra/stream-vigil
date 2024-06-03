@@ -89,9 +89,7 @@ class RAPP(AnomalyDetector):
         score : float
             Novelty score
         """
-        if len(h_pairs) == 0:
-            raise ValueError("h_pairs must have length greater than or equal to 1")
-        score = torch.zero_(h_pairs[0][0])
+        score = torch.tensor(0.0)
         for h, h_pred in h_pairs:
             score += (h - h_pred).norm(dim=1).square()
         return score
@@ -101,14 +99,19 @@ class RAPP(AnomalyDetector):
         Normalized Aggregation along Pathway (NAP)
         """
 
+        diffs = []
         for h, h_pred in h_pairs:
-            d = h - h_pred
-            d = d - d.mean(dim=0)
+            diffs.append(h - h_pred)
 
-        _, s, v = torch.linalg.svd(d, full_matrices=False)
-        s[s == 0] = 1.0
+        D = torch.concat(diffs, dim=1)
 
-        return d.matmul(v.T).matmul(torch.linalg.inv(s.diag())).norm(dim=1).square()
+        D = D - D.mean(dim=0)
+        _, S, V = torch.linalg.svd(D, full_matrices=False)
+
+        S[S == 0] = 1.0
+        S_inv = torch.linalg.inv(S.diag())
+
+        return D.matmul(V.T).matmul(S_inv).norm(dim=1).square()
 
     def train(self, x: torch.Tensor) -> torch.Tensor:
         x = x.to(self.device)

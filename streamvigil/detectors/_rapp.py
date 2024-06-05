@@ -88,7 +88,7 @@ class RAPP(AnomalyDetector):
         """
         score = torch.tensor(0.0)
         for h, h_pred in h_pairs:
-            score += (h - h_pred).norm(dim=1).square()
+            score = (h - h_pred).norm(dim=1).square() + score
         return score
 
     def _nap(self, h_pairs: List[Tuple[torch.Tensor, torch.Tensor]]) -> torch.Tensor:
@@ -133,10 +133,11 @@ class RAPP(AnomalyDetector):
             x_pred: torch.Tensor = self._auto_encoder(x)
             x_activations = sa.get_activations()
 
+        with _SaveActivations(self._auto_encoder.encoder) as sa:
             self._auto_encoder(x_pred)
             x_pred_activations = sa.get_activations()
 
-            for h, h_pred in zip(list(x_activations.values()), list(x_pred_activations.values())):
-                h_pairs.append((h, h_pred))
+        for h, h_pred in zip(list(x_activations.values()), list(x_pred_activations.values())):
+            h_pairs.append((h, h_pred))
 
-        return self._nap(h_pairs).sigmoid()
+        return self._nap(h_pairs)

@@ -49,7 +49,7 @@ class _SaveActivations:
 
     def _save(self, name: str):
         def hook(model: nn.Module, input: torch.Tensor, output: torch.Tensor):
-            self._activations[name] = output
+            self._activations[name] = output.detach()
 
         return hook
 

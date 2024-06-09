@@ -6,7 +6,6 @@ import torch
 from torch.optim import Adam, Optimizer
 
 from ._auto_encoder import AutoEncoder
-from .utils import validate_anomaly_scores
 
 
 class AnomalyDetector(ABC):
@@ -93,9 +92,6 @@ class AnomalyDetector(ABC):
         if scores.dim() != 1:
             raise ValueError("scores shape must be (1, n).")
 
-        if not validate_anomaly_scores(scores):
-            raise ValueError("Anomaly score must be between 0.0 and 1.0")
-
         # Small value to avoid division by zero. Default: 1e-8
         eps = 1e-8
 
@@ -110,8 +106,6 @@ class AnomalyDetector(ABC):
         self._set_reliability(reliability)
 
     def update_last_batch_scores(self, scores: torch.Tensor) -> None:
-        if not validate_anomaly_scores(scores):
-            raise ValueError("Anomaly score must be between 0.0 and 1.0")
 
         self._last_max_score = scores.max().item()
         self._last_min_score = scores.min().item()

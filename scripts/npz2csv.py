@@ -18,7 +18,7 @@ def main():
 
             df = pd.DataFrame(np.hstack((X, y)))
 
-            output_filename = os.path.basename(npz_path).replace(".npz", ".csv.gzip")
+            output_filename = os.path.basename(npz_path).replace(".npz", ".csv.gz")
             output_path = os.path.join(output_dir, output_filename)
             df.to_csv(output_path, header=False, index=False, compression="gzip")
 

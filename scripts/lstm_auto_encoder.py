@@ -116,8 +116,11 @@ class CSVDataset(Dataset):
             )
 
         if train:
-            self.X = torch.from_numpy(X_train.astype(np.float32))
-            self.y = torch.from_numpy(y_train.astype(np.float32))
+            X_train = torch.from_numpy(X_train.astype(np.float32))
+            y_train = torch.from_numpy(y_train.astype(np.float32))
+            idx = (y_train == 0).nonzero(as_tuple=False).squeeze()
+            self.X = X_train[idx]
+            self.y = y_train[idx]
         else:
             self.X = torch.from_numpy(X_test.astype(np.float32))
             self.y = torch.from_numpy(y_test.astype(np.float32))
@@ -134,7 +137,7 @@ def anomaly_score(X_pred: torch.Tensor, X: torch.Tensor) -> torch.Tensor:
 
 
 def main():
-    random_state = 84
+    random_state = 80
     set_seed(random_state)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -154,7 +157,7 @@ def main():
 
     test_dataset = CSVDataset(
         "./data/ADBench/1_ALOI.csv.gz",
-        train=True,
+        train=False,
         test_size=0.2,
         shuffle=True,
         random_state=random_state,
@@ -175,7 +178,7 @@ def main():
     auto_encoder = LSTMAutoEncoder(
         input_size=n_features,
         hidden_size=54,
-        num_layers=2,
+        num_layers=5,
     )
 
     auto_encoder.to(device)
@@ -211,6 +214,8 @@ def main():
     auprc = BinaryAUPRC()
 
     with torch.no_grad():
+        normal_scores = []
+        anomaly_scores = []
         for X, y in test_loader:
             X: torch.Tensor = X.unsqueeze(1).to(device)
             y: torch.Tensor = y.to(device)
@@ -221,11 +226,17 @@ def main():
             X_pred = X_pred.squeeze(1)
             scores = anomaly_score(X_pred, X)
 
+            normal_scores.extend(scores[y == 0].tolist())
+            anomaly_scores.extend(scores[y == 1].tolist())
+
             auroc.update(scores, y)
             auprc.update(scores, y)
 
     print(f"AUROC Score: {auroc.compute():0.3f}")
     print(f"AUPRC Score: {auprc.compute():0.3f}")
+
+    print(f"Average score for normal data: {torch.tensor(normal_scores).mean().item():0.5f}")
+    print(f"Average score for anomaly data: {torch.tensor(anomaly_scores).mean().item():0.5f}")
 
 
 if __name__ == "__main__":

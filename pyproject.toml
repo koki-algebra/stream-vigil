@@ -32,6 +32,7 @@ dev-dependencies = [
     "torcheval>=0.0.7",
     "ipykernel>=6.29.4",
     "lightgbm>=4.3.0",
+    "torchvision>=0.18.1",
 ]
 
 [tool.rye.scripts]

@@ -13,13 +13,14 @@ def main():
             npz_path = os.path.join(input_dir, filename)
 
             data = np.load(npz_path)
-            X = data["X"]
-            y = data["y"].reshape(-1, 1)
 
-            df = pd.DataFrame(np.hstack((X, y)))
+            X_df = pd.DataFrame(data["X"])
+            y_df = pd.DataFrame(data["y"])
+            df = pd.concat([X_df, y_df], axis=1)
 
             output_filename = os.path.basename(npz_path).replace(".npz", ".csv.gz")
             output_path = os.path.join(output_dir, output_filename)
+
             df.to_csv(output_path, header=False, index=False, compression="gzip")
 
             print(f"Processed {npz_path} and saved to {output_path}")

@@ -1,5 +1,5 @@
 import torch
-import torch.nn as nn
+from torch import nn
 from torch.optim import Adam, Optimizer
 from torch.utils.data import DataLoader
 from torcheval.metrics import BinaryAUPRC, BinaryAUROC
@@ -53,7 +53,7 @@ def main():
     auto_encoder.to(device)
 
     # Loss function
-    criterion = nn.MSELoss()
+    criterion = nn.MSELoss(reduction="none")
 
     # Optimizer
     optimizer = Adam(
@@ -82,10 +82,26 @@ def train_loop(model: nn.Module, loader: DataLoader, criterion, optimizer: Optim
     size = len(loader.dataset)
 
     model.train()
-    for batch, (X, _) in enumerate(loader):
+    for batch, (X, y) in enumerate(loader):
         X = X.to(device)
+
         X_pred = model(X)
-        loss: torch.Tensor = criterion(X_pred, X)
+        losses: torch.Tensor = criterion(X_pred, X).mean(dim=1)
+
+        normal_losses = losses[y == 0]
+        anomaly_losses = losses[y == 1]
+
+        if len(anomaly_losses) == 0:
+            anomaly_loss = torch.tensor(0.0, requires_grad=True)
+        else:
+            anomaly_loss = anomaly_losses.mean()
+
+        if len(normal_losses) == 0:
+            normal_loss = torch.tensor(0.0, requires_grad=True)
+        else:
+            normal_loss = normal_losses.mean()
+
+        loss = normal_loss - anomaly_loss
 
         # Backpropagation
         loss.backward()
@@ -96,7 +112,7 @@ def train_loop(model: nn.Module, loader: DataLoader, criterion, optimizer: Optim
             loss = loss.item()
             current = batch * train_batch_size + len(X)
 
-            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+            print(f"loss: {loss:>7f} [{current:>5d}/{size:>5d}]")
 
 
 def test_loop(model: nn.Module, loader: DataLoader):
@@ -110,6 +126,7 @@ def test_loop(model: nn.Module, loader: DataLoader):
     with torch.no_grad():
         for X, y in loader:
             X = X.to(device)
+
             X_pred = model(X)
             scores = anomaly_score(X_pred, X)
             auroc.update(scores, y)

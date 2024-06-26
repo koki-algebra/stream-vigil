@@ -108,6 +108,8 @@ def test_loop(model: nn.Module, loader: DataLoader):
     auprc = BinaryAUPRC()
 
     with torch.no_grad():
+        normal_scores = []
+        anomaly_scores = []
         for X, y in loader:
             X = X.to(device)
             X_pred = model(X)
@@ -115,8 +117,14 @@ def test_loop(model: nn.Module, loader: DataLoader):
             auroc.update(scores, y)
             auprc.update(scores, y)
 
+            normal_scores.extend(scores[y == 0].tolist())
+            anomaly_scores.extend(scores[y == 1].tolist())
+
     print(f"AUROC Score: {auroc.compute():0.3f}")
     print(f"AUPRC Score: {auprc.compute():0.3f}")
+
+    print(f"Average score for normal data: {torch.tensor(normal_scores).mean().item():0.5f}")
+    print(f"Average score for anomaly data: {torch.tensor(anomaly_scores).mean().item():0.5f}")
 
 
 def anomaly_score(X_pred: torch.Tensor, X: torch.Tensor) -> torch.Tensor:

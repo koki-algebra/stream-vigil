@@ -1,6 +1,11 @@
 .PHONY: help
 .DEFAULT_GOAL := help
 
+CONTAINER_NAME := stream-vigil
+
+shell: ## Login shell
+	@docker exec -it $(CONTAINER_NAME) bash
+
 fmt: ## Format python code
 	@rye run fmt
 

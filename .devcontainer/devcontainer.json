@@ -6,7 +6,9 @@
 	},
 	"runArgs": [
 		"--gpus",
-		"all"
+		"all",
+		"--name",
+		"stream-vigil"
 	],
 	"features": {
 		"ghcr.io/devcontainers/features/nvidia-cuda": {

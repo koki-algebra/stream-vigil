@@ -25,6 +25,7 @@ def main():
         "./data/ADBench/3_backdoor.csv.gz",
         train=True,
         test_size=0.2,
+        labeled_size=0.3,
         random_state=random_state,
     )
     test_data = CSVDataset(
@@ -84,11 +85,12 @@ def train_loop(model: nn.Module, loader: DataLoader, criterion, optimizer: Optim
     model.train()
     for batch, (X, y) in enumerate(loader):
         X = X.to(device)
+        y: torch.Tensor
 
         X_pred = model(X)
         losses: torch.Tensor = criterion(X_pred, X).mean(dim=1)
 
-        normal_losses = losses[y == 0]
+        normal_losses = losses[torch.logical_or(y == 0, y.isnan())]
         anomaly_losses = losses[y == 1]
 
         if len(anomaly_losses) == 0:

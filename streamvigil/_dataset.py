@@ -48,6 +48,7 @@ class CSVDataset(Dataset):
         filepath: str,
         train=True,
         test_size=0.3,
+        labeled_size=1.0,
         shuffle=False,
         random_state: float | None = None,
     ) -> None:
@@ -69,6 +70,13 @@ class CSVDataset(Dataset):
         if train:
             self.X = torch.from_numpy(X_train.astype(np.float32))
             self.y = torch.from_numpy(y_train.astype(np.float32))
+            if labeled_size >= 0.0 and labeled_size < 1.0:
+                unlabeled_indices = np.random.choice(
+                    len(X_train),
+                    size=int((1.0 - labeled_size) * len(X_train)),
+                    replace=False,
+                )
+                self.y[unlabeled_indices] = torch.nan
         else:
             self.X = torch.from_numpy(X_test.astype(np.float32))
             self.y = torch.from_numpy(y_test.astype(np.float32))

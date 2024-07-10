@@ -80,7 +80,7 @@ def main():
         for batch, (X, _) in enumerate(train_loader):
             X: torch.Tensor = X.to(device)
             X = X.view(X.size(0), -1)
-            X_pred = auto_encoder(X)
+            X_pred, _ = auto_encoder(X)
 
             loss = criterion(X_pred, X)
 
@@ -107,7 +107,7 @@ def main():
             y: torch.Tensor = y.to(device)
 
             X = X.view(X.size(0), -1)
-            X_pred = auto_encoder(X)
+            X_pred, _ = auto_encoder(X)
 
             scores = anomaly_score(X_pred, X)
 

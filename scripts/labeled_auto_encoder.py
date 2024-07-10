@@ -86,7 +86,7 @@ def train_loop(model: nn.Module, loader: DataLoader, criterion, optimizer: Optim
         X = X.to(device)
         y: torch.Tensor
 
-        X_pred = model(X)
+        X_pred, _ = model(X)
         losses: torch.Tensor = criterion(X_pred, X).mean(dim=1)
 
         normal_losses = losses[torch.logical_or(y == 0, y.isnan())]
@@ -130,7 +130,7 @@ def test_loop(model: nn.Module, loader: DataLoader):
         for X, y in loader:
             X = X.to(device)
 
-            X_pred = model(X)
+            X_pred, _ = model(X)
             scores = anomaly_score(X_pred, X)
             auroc.update(scores, y)
             auprc.update(scores, y)

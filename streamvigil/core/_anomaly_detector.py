@@ -4,8 +4,7 @@ from abc import ABC, abstractmethod
 
 import torch
 from torch.optim import Adam, Optimizer
-
-from ._auto_encoder import AutoEncoder
+from torch import nn
 
 
 class AnomalyDetector(ABC):
@@ -13,7 +12,7 @@ class AnomalyDetector(ABC):
     Anomaly detector base class for model pool based methods.
     """
 
-    def __init__(self, auto_encoder: AutoEncoder, learning_rate=1e-4) -> None:
+    def __init__(self, auto_encoder: nn.Module, learning_rate=1e-4) -> None:
         super().__init__()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -106,7 +105,6 @@ class AnomalyDetector(ABC):
         self._set_reliability(reliability)
 
     def update_last_batch_scores(self, scores: torch.Tensor) -> None:
-
         self._last_max_score = scores.max().item()
         self._last_min_score = scores.min().item()
         self._last_mean_score = scores.mean().item()
@@ -126,7 +124,8 @@ class AnomalyDetector(ABC):
             Latent representation of `x`.
         """
         x = x.to(self.device)
-        return self._auto_encoder.encode(x)
+        _, z = self._auto_encoder(x)
+        return z
 
     def _load_optimizer(self) -> Optimizer:
         return Adam(self._auto_encoder.parameters(), lr=self._learning_rate)

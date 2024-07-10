@@ -25,7 +25,6 @@ def main():
         "./data/ADBench/3_backdoor.csv.gz",
         train=True,
         test_size=0.2,
-        labeled_size=0.3,
         random_state=random_state,
     )
     test_data = CSVDataset(
@@ -143,7 +142,11 @@ def test_loop(model: nn.Module, loader: DataLoader):
     print(f"AUPRC Score: {auprc.compute():0.3f}")
 
     print(f"Average score for normal data: {torch.tensor(normal_scores).mean().item():0.5f}")
+    print(f"Max score for normal data: {torch.tensor(normal_scores).max().item():0.5f}")
+    print(f"Min score for normal data: {torch.tensor(normal_scores).min().item():0.5f}")
     print(f"Average score for anomaly data: {torch.tensor(anomaly_scores).mean().item():0.5f}")
+    print(f"Max score for normal data: {torch.tensor(anomaly_scores).max().item():0.5f}")
+    print(f"Min score for normal data: {torch.tensor(anomaly_scores).min().item():0.5f}")
 
 
 def anomaly_score(X_pred: torch.Tensor, X: torch.Tensor) -> torch.Tensor:

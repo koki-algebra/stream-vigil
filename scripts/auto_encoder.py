@@ -84,7 +84,7 @@ def train_loop(model: nn.Module, loader: DataLoader, criterion, optimizer: Optim
     model.train()
     for batch, (X, _) in enumerate(loader):
         X = X.to(device)
-        X_pred = model(X)
+        X_pred, _ = model(X)
         loss: torch.Tensor = criterion(X_pred, X)
 
         # Backpropagation
@@ -112,7 +112,7 @@ def test_loop(model: nn.Module, loader: DataLoader):
         anomaly_scores = []
         for X, y in loader:
             X = X.to(device)
-            X_pred = model(X)
+            X_pred, _ = model(X)
             scores = anomaly_score(X_pred, X)
             auroc.update(scores, y)
             auprc.update(scores, y)

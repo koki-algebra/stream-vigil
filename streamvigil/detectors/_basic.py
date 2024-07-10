@@ -1,13 +1,13 @@
-from typing import List
+from typing import List, Tuple
 
 import torch
 import torch.nn as nn
 from torch.nn import MSELoss
 
-from streamvigil.core import AnomalyDetector, AutoEncoder
+from streamvigil.core import AnomalyDetector
 
 
-class BasicAutoEncoder(AutoEncoder):
+class BasicAutoEncoder(nn.Module):
     def __init__(self, encoder_dims: List[int], decoder_dims: List[int], batch_norm=False) -> None:
         super().__init__()
 
@@ -26,15 +26,14 @@ class BasicAutoEncoder(AutoEncoder):
 
         return network
 
-    def encode(self, x: torch.Tensor) -> torch.Tensor:
-        return self.encoder(x)
-
-    def decode(self, z: torch.Tensor) -> torch.Tensor:
-        return self.decoder(z)
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        z = self.encoder(x)
+        x_pred = self.decoder(z)
+        return x_pred, z
 
 
 class BasicDetector(AnomalyDetector):
-    def __init__(self, auto_encoder: AutoEncoder, learning_rate=0.0001) -> None:
+    def __init__(self, auto_encoder: nn.Module, learning_rate=0.0001) -> None:
         super().__init__(auto_encoder, learning_rate)
 
         # Loss function

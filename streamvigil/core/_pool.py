@@ -101,7 +101,7 @@ class ModelPool:
         # update model pool reliability
         self._reliability = 1 - tmp
 
-        return anomaly_scores.sigmoid()
+        return anomaly_scores
 
     def add_model(self) -> uuid.UUID:
         """
@@ -146,16 +146,16 @@ class ModelPool:
 
         return linear_CKA(z1, z2).item()
 
-    def train(self, model_id: uuid.UUID, x: torch.Tensor) -> torch.Tensor:
+    def stream_train(self, model_id: uuid.UUID, X: torch.Tensor) -> torch.Tensor:
         """
-        Train the model with `model_id` with data matrix `x`
+        Train the model with `model_id` with data matrix `X`
 
         Parameters
         ----------
         model_id : uuid.UUID
             ID of the model to be trained.
 
-        x : torch.Tensor
+        X : torch.Tensor
             Data matrix.
 
         Returns
@@ -165,14 +165,25 @@ class ModelPool:
         """
         model = self.get_model(model_id)
         # Train the model
-        loss = model.train(x)
+        loss = model.stream_train(X)
 
         # Update the last batch scores
-        scores = model.predict(x)
+        scores = model.predict(X)
         model.update_last_batch_scores(scores)
 
         # Increment the number of batches used for training
         model.num_batches += 1
+
+        return loss
+
+    def batch_train(
+        self,
+        model_id: uuid.UUID,
+        X: torch.Tensor,
+        y: torch.Tensor,
+    ) -> torch.Tensor:
+        model = self.get_model(model_id)
+        loss = model.batch_train(X, y)
 
         return loss
 

@@ -124,7 +124,7 @@ class ModelPool:
 
         return detector.model_id
 
-    def similarity(self, x: torch.Tensor, model_id1: uuid.UUID, model_id2: uuid.UUID) -> float:
+    def similarity(self, X: torch.Tensor, model_id1: uuid.UUID, model_id2: uuid.UUID) -> float:
         """
         Calculate the similarity between model ID1 and ID2.
 
@@ -141,10 +141,12 @@ class ModelPool:
         similarity : float
             Model similarity.
         """
-        z1 = self.get_model(model_id1).encode(x)
-        z2 = self.get_model(model_id2).encode(x)
+        model1 = self.get_model(model_id1)
+        _, Z1 = model1._auto_encoder(X)
+        model2 = self.get_model(model_id2)
+        _, Z2 = model2._auto_encoder(X)
 
-        return linear_CKA(z1, z2).item()
+        return linear_CKA(Z1, Z2).item()
 
     def stream_train(self, model_id: uuid.UUID, X: torch.Tensor) -> torch.Tensor:
         """

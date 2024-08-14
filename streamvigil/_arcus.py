@@ -36,7 +36,7 @@ class ARCUS:
         model_id = self._pool.add_model()
         # Train the new model
         for epoch in range(self._max_epochs):
-            loss = self._pool.train(model_id, x)
+            loss = self._pool.stream_train(model_id, x)
             if epoch % 10 == 0:
                 logger.info(f"loss: {loss.item():>7f}")
 
@@ -69,7 +69,7 @@ class ARCUS:
             # Train the new model
             logger.info("Start training a new model...")
             for epoch in range(self._max_epochs):
-                loss = self._pool.train(model_id, x)
+                loss = self._pool.stream_train(model_id, x)
                 if epoch % 10 == 0:
                     logger.info(f"loss: {loss.item():>7f}")
 
@@ -84,7 +84,7 @@ class ARCUS:
             # Train the model
             logger.info(f"Start training model with id {model_id}...")
             for epoch in range(self._max_epochs):
-                loss = self._pool.train(model_id, x)
+                loss = self._pool.stream_train(model_id, x)
                 if epoch % 10 == 0:
                     logger.info(f"loss: {loss.item():>7f}")
             logger.info(f"Completed training model with id {model_id}!")

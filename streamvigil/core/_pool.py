@@ -62,9 +62,9 @@ class ModelPool:
         """
         return self._pool[model_id]
 
-    def predict(self, x: torch.Tensor) -> torch.Tensor:
+    def predict(self, X: torch.Tensor) -> torch.Tensor:
         """
-        Run predictions on data matrix `x`.
+        Run predictions on data matrix `X`.
 
         Parameters
         ----------
@@ -79,14 +79,14 @@ class ModelPool:
         # Small value to avoid division by zero. Default: 1e-8
         eps = 1e-8
 
-        x = x.to(self.device)
+        X = X.to(self.device)
 
-        anomaly_scores = torch.zeros(x.shape[0], device=self.device)
+        anomaly_scores = torch.zeros(X.shape[0], device=self.device)
         tmp = 1.0
 
         for model in self.get_models():
             # Predict the anomaly scores
-            scores = model.predict(x)
+            scores = model.predict(X)
 
             # Update the model reliability
             model.update_reliability(scores)

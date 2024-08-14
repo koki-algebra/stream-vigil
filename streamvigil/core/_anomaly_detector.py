@@ -3,8 +3,8 @@ import uuid
 from abc import ABC, abstractmethod
 
 import torch
-from torch.optim import Adam, Optimizer
 from torch import nn
+from torch.optim import Adam, Optimizer
 
 
 class AnomalyDetector(ABC):
@@ -34,11 +34,6 @@ class AnomalyDetector(ABC):
 
     @property
     def model_id(self) -> uuid.UUID:
-        """
-        model_id : uuid.UUID
-            Model ID
-        """
-
         return self._model_id
 
     @model_id.setter
@@ -47,20 +42,9 @@ class AnomalyDetector(ABC):
 
     @property
     def reliability(self) -> float:
-        """
-        reliability : float
-            A model reliability.
-            This reliability must be between 0.0 and 1.0.
-        """
         return self._reliability
 
     def _set_reliability(self, v: float) -> None:
-        """
-        Private setter for reliability property.
-        Model reliability must be between 0.0 and 1.0.
-        """
-        if v < 0.0 or v > 1.0:
-            raise ValueError("Model reliability must be between 0.0 and 1.0")
         self._reliability = v
 
     @property
@@ -109,59 +93,17 @@ class AnomalyDetector(ABC):
         self._last_min_score = scores.min().item()
         self._last_mean_score = scores.mean().item()
 
-    def encode(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Encode the input data matrix `x` into a latent representation.
-
-        Parameters
-        ----------
-        x : torch.Tensor
-            Data matrix.
-
-        Returns
-        -------
-        z : torch.Tensor
-            Latent representation of `x`.
-        """
-        x = x.to(self.device)
-        _, z = self._auto_encoder(x)
-        return z
-
     def _load_optimizer(self) -> Optimizer:
         return Adam(self._auto_encoder.parameters(), lr=self._learning_rate)
 
     @abstractmethod
-    def train(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Train the model with unsupervised learning.
-
-        Parameters
-        ----------
-        x : torch.Tensor
-            Data matrix.
-
-        Returns
-        -------
-        loss : torch.Tensor
-            Training loss.
-        """
+    def stream_train(self, X: torch.Tensor) -> torch.Tensor:
         pass
 
     @abstractmethod
-    def predict(self, x: torch.Tensor) -> torch.Tensor:
-        """
-        Parameters
-        ----------
-        x : torch.Tensor
-            Data matrix.
+    def batch_train(self, X: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        pass
 
-        Returns
-        -------
-        scores : torch.Tensor
-            Anomaly scores vector. Each score must be between 0.0 and 1.0.
-            e.g. Anomaly score for data matrix with 5 samples:
-                ```
-                scores = torch.Tensor([0.6, 0.2, 0.3, 0.9, 0.1])
-                ```
-        """
+    @abstractmethod
+    def predict(self, X: torch.Tensor) -> torch.Tensor:
         pass

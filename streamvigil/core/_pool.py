@@ -62,9 +62,9 @@ class ModelPool:
         """
         return self._pool[model_id]
 
-    def predict(self, x: torch.Tensor) -> torch.Tensor:
+    def predict(self, X: torch.Tensor) -> torch.Tensor:
         """
-        Run predictions on data matrix `x`.
+        Run predictions on data matrix `X`.
 
         Parameters
         ----------
@@ -79,14 +79,14 @@ class ModelPool:
         # Small value to avoid division by zero. Default: 1e-8
         eps = 1e-8
 
-        x = x.to(self.device)
+        X = X.to(self.device)
 
-        anomaly_scores = torch.zeros(x.shape[0], device=self.device)
+        anomaly_scores = torch.zeros(X.shape[0], device=self.device)
         tmp = 1.0
 
         for model in self.get_models():
             # Predict the anomaly scores
-            scores = model.predict(x)
+            scores = model.predict(X)
 
             # Update the model reliability
             model.update_reliability(scores)
@@ -101,7 +101,7 @@ class ModelPool:
         # update model pool reliability
         self._reliability = 1 - tmp
 
-        return anomaly_scores.sigmoid()
+        return anomaly_scores
 
     def add_model(self) -> uuid.UUID:
         """
@@ -124,7 +124,7 @@ class ModelPool:
 
         return detector.model_id
 
-    def similarity(self, x: torch.Tensor, model_id1: uuid.UUID, model_id2: uuid.UUID) -> float:
+    def similarity(self, X: torch.Tensor, model_id1: uuid.UUID, model_id2: uuid.UUID) -> float:
         """
         Calculate the similarity between model ID1 and ID2.
 
@@ -141,21 +141,23 @@ class ModelPool:
         similarity : float
             Model similarity.
         """
-        z1 = self.get_model(model_id1).encode(x)
-        z2 = self.get_model(model_id2).encode(x)
+        model1 = self.get_model(model_id1)
+        _, Z1 = model1._auto_encoder(X)
+        model2 = self.get_model(model_id2)
+        _, Z2 = model2._auto_encoder(X)
 
-        return linear_CKA(z1, z2).item()
+        return linear_CKA(Z1, Z2).item()
 
-    def train(self, model_id: uuid.UUID, x: torch.Tensor) -> torch.Tensor:
+    def stream_train(self, model_id: uuid.UUID, X: torch.Tensor) -> torch.Tensor:
         """
-        Train the model with `model_id` with data matrix `x`
+        Train the model with `model_id` with data matrix `X`
 
         Parameters
         ----------
         model_id : uuid.UUID
             ID of the model to be trained.
 
-        x : torch.Tensor
+        X : torch.Tensor
             Data matrix.
 
         Returns
@@ -165,14 +167,25 @@ class ModelPool:
         """
         model = self.get_model(model_id)
         # Train the model
-        loss = model.train(x)
+        loss = model.stream_train(X)
 
         # Update the last batch scores
-        scores = model.predict(x)
+        scores = model.predict(X)
         model.update_last_batch_scores(scores)
 
         # Increment the number of batches used for training
         model.num_batches += 1
+
+        return loss
+
+    def batch_train(
+        self,
+        model_id: uuid.UUID,
+        X: torch.Tensor,
+        y: torch.Tensor,
+    ) -> torch.Tensor:
+        model = self.get_model(model_id)
+        loss = model.batch_train(X, y)
 
         return loss
 

@@ -1,2 +1,2 @@
 from ._anomaly_detector import AnomalyDetector
-from ._pool import ModelPool
+from ._model_pool import ModelPool

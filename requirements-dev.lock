@@ -148,9 +148,10 @@ pyzmq==26.0.2
 ruff==0.3.0
 scikit-learn==1.4.2
     # via streamvigil
-scipy==1.12.0
+scipy==1.14.0
     # via lightgbm
     # via scikit-learn
+    # via streamvigil
 seaborn==0.13.2
 six==1.16.0
     # via asttokens

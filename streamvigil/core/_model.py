@@ -71,8 +71,7 @@ class Model(ABC):
         self._num_batches = v
 
     def encode(self, X: Tensor) -> Tensor:
-        _, Z = self._detector._auto_encoder(X)
-        return Z
+        return self._detector.encode(X)
 
     def stream_train(self, X: Tensor) -> Tensor:
         return self._detector.stream_train(X)

@@ -21,6 +21,11 @@ class AnomalyDetector(ABC):
     def _load_optimizer(self) -> Optimizer:
         return Adam(self._auto_encoder.parameters(), lr=self._learning_rate)
 
+    def encode(self, X: torch.Tensor) -> torch.Tensor:
+        X = X.to(self.device)
+        _, Z = self._auto_encoder(X)
+        return Z
+
     @abstractmethod
     def stream_train(self, X: torch.Tensor) -> torch.Tensor:
         pass

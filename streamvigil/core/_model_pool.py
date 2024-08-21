@@ -78,7 +78,10 @@ class ModelPool:
         # Remove source model
         self._pool.pop(src_id)
 
-    def find_most_similar_model(self, x: Tensor, model_id: UUID) -> tuple[UUID, float]:
+    def find_most_similar_model(self, X: Tensor, model_id: UUID) -> tuple[UUID, float]:
+        """
+        Find the model that is most similar to the model with id `model_id`.
+        """
         models = self.get_models()
         if len(models) <= 1:
             raise ValueError("No other models exist")
@@ -86,19 +89,23 @@ class ModelPool:
         max_sim = -1.0
         for model in models:
             if model.model_id != model_id:
-                sim = self.similarity(x, model_id, model.model_id)
+                sim = self.similarity(X, model_id, model.model_id)
                 if max_sim < sim:
                     max_id = model.model_id
                     max_sim = sim
 
         return max_id, max_sim
 
-    def compress(self, x: Tensor, dst_id: UUID) -> bool:
+    def compress(self, X: Tensor, dst_id: UUID) -> bool:
+        """
+        Recursively find models similar to the model with id `dst_id` and merge them into destination model.
+        """
+
         if len(self.get_models()) <= 1:
             return False
 
         # Find the most similar model
-        src_id, sim = self.find_most_similar_model(x, dst_id)
+        src_id, sim = self.find_most_similar_model(X, dst_id)
 
         if sim >= self._similarity_threshold:
             self._merge_models(src_id, dst_id)

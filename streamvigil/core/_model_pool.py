@@ -1,5 +1,5 @@
 import copy
-from typing import Dict, List
+from typing import Dict, Generic, List, TypeVar
 from uuid import UUID
 
 import torch
@@ -9,8 +9,10 @@ from ._anomaly_detector import AnomalyDetector
 from ._model import Model
 from .similarity import linear_CKA
 
+T = TypeVar("T", bound=Model)
 
-class ModelPool:
+
+class ModelPool(Generic[T]):
     def __init__(
         self,
         detector: AnomalyDetector,
@@ -21,21 +23,24 @@ class ModelPool:
         self._reliability_threshold = reliability_threshold
         self._similarity_threshold = similarity_threshold
 
-        self._pool: Dict[UUID, Model] = {}
+        self._pool: Dict[UUID, T] = {}
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def add_model(self) -> UUID:
         detector = copy.deepcopy(self._detector)
-        model = Model(detector)
+        model = self._create_model(detector)
         self._pool[model.model_id] = model
 
         return model.model_id
 
-    def get_model(self, model_id: UUID) -> Model:
+    def _create_model(self, detector: AnomalyDetector) -> T:
+        return Model(detector)  # type: ignore
+
+    def get_model(self, model_id: UUID) -> T:
         return self._pool[model_id]
 
-    def get_models(self) -> List[Model]:
+    def get_models(self) -> List[T]:
         return list(self._pool.values())
 
     def is_drift(self) -> bool:

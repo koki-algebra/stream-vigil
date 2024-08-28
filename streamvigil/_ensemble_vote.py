@@ -1,8 +1,8 @@
 from typing import Dict
 from uuid import UUID
 
+import torch
 from torch import Tensor
-from torch.nn.functional import binary_cross_entropy
 
 from streamvigil.core import AnomalyDetector, Model, ModelPool
 
@@ -21,6 +21,7 @@ class EnsembleVoteModelPool(ModelPool[Model]):
         for model in self.get_models():
             model_scores = model.predict(X)
 
-            result[model.model_id] = binary_cross_entropy(model_scores, pool_scores)
+            # Mean Squared Error (MSE)
+            result[model.model_id] = torch.mean((model_scores - pool_scores) ** 2)
 
         return min(result, key=lambda k: result[k].item())

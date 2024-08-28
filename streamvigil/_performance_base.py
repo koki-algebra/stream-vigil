@@ -26,4 +26,4 @@ class PerformanceBaseModelPool(ModelPool[Model]):
             result[model.model_id] = auprc.compute()
             auprc.reset()
 
-        return max(result, key=result.get)
+        return max(result, key=lambda k: result[k].item())

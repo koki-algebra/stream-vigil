@@ -164,3 +164,7 @@ cython_debug/
 
 # Dataset
 data/
+
+# rye
+requirements.lock
+requirements-dev.lock

@@ -34,13 +34,13 @@ def main():
     epochs = 10
 
     train_dataset = datasets.MNIST(
-        root="./data/MNIST",
+        root="./data/pytorch",
         train=True,
         download=True,
         transform=transform,
     )
     test_dataset = datasets.MNIST(
-        root="./data/MNIST",
+        root="./data/pytorch",
         train=False,
         download=True,
         transform=transform,

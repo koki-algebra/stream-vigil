@@ -46,8 +46,6 @@ class BasicDetector(AnomalyDetector):
     def stream_train(self, X: torch.Tensor) -> torch.Tensor:
         X = X.to(self.device)
 
-        criterion = nn.MSELoss()
-
         # Optimizer
         optimizer = self._load_optimizer()
 
@@ -55,12 +53,12 @@ class BasicDetector(AnomalyDetector):
         self._auto_encoder.train()
         # Compute prediction and loss
         X_pred, _ = self._auto_encoder(X)
-        loss: torch.Tensor = criterion(X_pred, X)
+        loss: torch.Tensor = self._criterion(X_pred, X)
 
         # Backpropagation
+        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        optimizer.zero_grad()
 
         return loss
 

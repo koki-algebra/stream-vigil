@@ -1,48 +1,14 @@
-import random
-from typing import List
-
-import torch
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
 from streamvigil import PerformanceBaseModelPool
 from streamvigil.core import Model
 from streamvigil.detectors import BasicAutoEncoder, BasicDetector
-from streamvigil.utils import set_seed
+from streamvigil.utils import filter_by_label, set_seed
 
 train_batch_size = 128
 test_batch_size = 64
 epochs = 5
-
-
-def filter_by_label(normal_labels: List[int], anomaly_labels: List[int], anomaly_ratio: float = 0.05, is_train=True):
-    transform = transforms.Compose([transforms.ToTensor()])
-
-    dataset = datasets.MNIST(
-        root="./data/pytorch",
-        train=is_train,
-        download=True,
-        transform=transform,
-    )
-
-    normal_indices = [i for i, target in enumerate(dataset.targets) if target in normal_labels]
-    anomaly_indices = [i for i, target in enumerate(dataset.targets) if target in anomaly_labels]
-
-    total_samples = len(normal_indices) + len(anomaly_indices)
-    desired_anomaly_samples = int(total_samples * anomaly_ratio)
-
-    if len(anomaly_indices) > desired_anomaly_samples:
-        anomaly_indices = random.sample(anomaly_indices, desired_anomaly_samples)
-
-    selected_indices = normal_indices + anomaly_indices
-
-    dataset.data = dataset.data[selected_indices]
-    dataset.targets = dataset.targets[selected_indices]
-
-    # ラベルを二値分類用に変更（0: normal, 1: anomaly）
-    dataset.targets = torch.tensor([0 if target in normal_labels else 1 for target in dataset.targets])
-
-    return dataset
 
 
 def train(dataset: datasets.MNIST, model: Model):
@@ -69,11 +35,32 @@ def main():
     random_state = 90
     set_seed(random_state)
 
-    # Dataset
-    concept_a_dataset = filter_by_label(normal_labels=[1, 2], anomaly_labels=[3])
-    concept_b_dataset = filter_by_label(normal_labels=[4, 5], anomaly_labels=[6])
-    concept_c_dataset = filter_by_label(normal_labels=[7, 8], anomaly_labels=[9])
+    transform = transforms.Compose([transforms.ToTensor()])
+    train_dataset = datasets.MNIST(
+        root="./data/pytorch",
+        train=True,
+        download=True,
+        transform=transform,
+    )
 
+    # Dataset
+    concept_a_dataset = filter_by_label(
+        train_dataset,
+        normal_labels=[1, 2],
+        anomaly_labels=[3],
+    )
+    concept_b_dataset = filter_by_label(
+        train_dataset,
+        normal_labels=[4, 5],
+        anomaly_labels=[6],
+    )
+    concept_c_dataset = filter_by_label(
+        train_dataset,
+        normal_labels=[7, 8],
+        anomaly_labels=[9],
+    )
+
+    # Model
     auto_encoder = BasicAutoEncoder(
         encoder_dims=[784, 588, 392, 196],
         decoder_dims=[196, 392, 588, 784],
@@ -81,6 +68,7 @@ def main():
     )
     detector = BasicDetector(auto_encoder)
 
+    # Model Pool
     model_pool = PerformanceBaseModelPool(detector)
 
     # Add models
@@ -101,9 +89,27 @@ def main():
     train(concept_c_dataset, model_c)
 
     # Test
-    concept_a_test_dataset = filter_by_label(normal_labels=[1, 2], anomaly_labels=[3], is_train=False)
-    concept_b_test_dataset = filter_by_label(normal_labels=[4, 5], anomaly_labels=[6], is_train=False)
-    concept_c_test_dataset = filter_by_label(normal_labels=[7, 8], anomaly_labels=[9], is_train=False)
+    test_dataset = datasets.MNIST(
+        root="./data/pytorch",
+        train=False,
+        download=True,
+        transform=transform,
+    )
+    concept_a_test_dataset = filter_by_label(
+        test_dataset,
+        normal_labels=[1, 2],
+        anomaly_labels=[3],
+    )
+    concept_b_test_dataset = filter_by_label(
+        test_dataset,
+        normal_labels=[4, 5],
+        anomaly_labels=[6],
+    )
+    concept_c_test_dataset = filter_by_label(
+        test_dataset,
+        normal_labels=[7, 8],
+        anomaly_labels=[9],
+    )
 
     concept_a_test_loader = DataLoader(
         concept_a_test_dataset,

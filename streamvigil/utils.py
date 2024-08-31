@@ -4,7 +4,7 @@ from typing import List
 
 import numpy as np
 import torch
-from torch.utils.data import Dataset
+from torchvision.datasets import MNIST
 
 
 def set_seed(seed):
@@ -23,7 +23,7 @@ def set_seed(seed):
 
 
 def filter_by_label(
-    dataset: Dataset,
+    dataset: MNIST,
     normal_labels: List[int],
     anomaly_labels: List[int],
     anomaly_ratio: float = 0.05,

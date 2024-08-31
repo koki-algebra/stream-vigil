@@ -1,8 +1,8 @@
 from typing import Dict
 from uuid import UUID
 
+import torch
 from torch import Tensor
-from torcheval.metrics import BinaryAUPRC
 
 from streamvigil.core import AnomalyDetector, Model, ModelPool
 
@@ -13,17 +13,14 @@ class PerformanceBaseModelPool(ModelPool[Model]):
 
     def select_model(self, X: Tensor, y: Tensor) -> UUID:
         """
-        Select the model with the highest AUPRC.
+        Select the model with the smallest reconstruction error.
         """
-        auprc = BinaryAUPRC()
+        normal_indices = torch.where(y == 0)[0]
+        X_normal = X[normal_indices]
 
         result: Dict[UUID, Tensor] = {}
         for model in self.get_models():
-            scores = model.predict(X)
+            scores = model.predict(X_normal)
+            result[model.model_id] = scores.sum()
 
-            auprc.update(scores, y)
-
-            result[model.model_id] = auprc.compute()
-            auprc.reset()
-
-        return max(result, key=lambda k: result[k].item())
+        return min(result, key=lambda k: result[k].item())

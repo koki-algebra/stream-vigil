@@ -15,6 +15,7 @@ def train(dataset: datasets.MNIST, model: Model):
     loader = DataLoader(
         dataset,
         batch_size=train_batch_size,
+        shuffle=True,
     )
 
     size = len(loader.dataset)
@@ -32,7 +33,7 @@ def train(dataset: datasets.MNIST, model: Model):
 
 
 def main():
-    random_state = 90
+    random_state = 900
     set_seed(random_state)
 
     transform = transforms.Compose([transforms.ToTensor()])
@@ -147,8 +148,9 @@ def main():
         if model_id == model_id_c:
             correct += 1
 
+    print()
     print(f"correct: {correct}, total: {test_total}")
-    print(f"accuracy: {correct / test_total}")
+    print(f"accuracy: {(correct / test_total):0.3f}")
 
 
 if __name__ == "__main__":

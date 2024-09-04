@@ -3,8 +3,8 @@ from logging import getLogger
 from torch import Tensor
 
 from ._arcus_model_pool import ARCUSModelPool
-from .core._model import Model
 from .core._anomaly_detector import AnomalyDetector
+from .core._model import Model
 
 
 class ARCUS:
@@ -26,7 +26,7 @@ class ARCUS:
         # Add initial model
         self.model_pool.add_model()
 
-    def stream_train(self, X: Tensor, is_logging = False):
+    def stream_train(self, X: Tensor, is_logging=False):
         if self.model_pool.is_drift():
             self.logger.info("concept drift detected!")
 
@@ -46,6 +46,15 @@ class ARCUS:
 
             if is_logging:
                 self.logger.info(f"model {model_id} is selected: loss = {loss.item():0.5f}")
+
+    def update_reliability(self, X: Tensor, is_logging=False):
+        if is_logging:
+            self.logger.info(f"[before] model pool reliability = {self.model_pool._reliability:0.5f}")
+
+        self.model_pool.update_reliability(X)
+
+        if is_logging:
+            self.logger.info(f"[after] model pool reliability = {self.model_pool._reliability:0.5f}")
 
     def predict(self, X: Tensor) -> Tensor:
         return self.model_pool.predict(X)

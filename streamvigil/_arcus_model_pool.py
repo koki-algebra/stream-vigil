@@ -141,6 +141,22 @@ class ARCUSModelPool(Generic[T]):
 
         return loss
 
+    def update_reliability(self, X: Tensor):
+        """
+        Update the reliability of each model and the entire model pool.
+        """
+        X = X.to(self.device)
+
+        tmp = 1.0
+
+        for model in self.get_models():
+            scores = model.predict(X)
+            model.update_reliability(scores)
+
+            tmp *= 1 - model.reliability
+
+        self._reliability = 1 - tmp
+
     def predict(self, X: Tensor) -> Tensor:
         # Small value to avoid division by zero. Default: 1e-8
         eps = 1e-8
@@ -148,23 +164,14 @@ class ARCUSModelPool(Generic[T]):
         X = X.to(self.device)
 
         anomaly_scores = torch.zeros(X.shape[0], device=self.device)
-        tmp = 1.0
 
         for model in self.get_models():
             # Predict the anomaly scores
             scores = model.predict(X)
 
-            # Update the model reliability
-            model.update_reliability(scores)
-
             # Standardized square error
             scores = (scores - scores.mean()) / (scores.std() + eps)
 
             anomaly_scores += scores * model.reliability
-
-            tmp *= 1 - model.reliability
-
-        # update model pool reliability
-        self._reliability = 1 - tmp
 
         return anomaly_scores

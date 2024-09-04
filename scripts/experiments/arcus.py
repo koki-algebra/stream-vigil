@@ -2,7 +2,6 @@ from logging import getLogger
 from logging.config import dictConfig
 
 from torch.utils.data import DataLoader
-from torcheval.metrics import BinaryAUPRC, BinaryAUROC
 from torchvision import datasets, transforms
 from yaml import safe_load
 
@@ -53,37 +52,16 @@ def main():
         for batch, (X, _) in enumerate(train_loader):
             X = X.view(X.size(0), -1)
 
+            if batch != 0:
+                if batch % 100 == 0:
+                    arcus.update_reliability(X, is_logging=True)
+                else:
+                    arcus.update_reliability(X)
+
             if batch % 100 == 0:
                 arcus.stream_train(X, is_logging=True)
             else:
                 arcus.stream_train(X)
-
-    # Test
-    test_dataset = datasets.MNIST(
-        root="./data/pytorch",
-        train=False,
-        download=True,
-        transform=transform,
-    )
-    test_loader = DataLoader(
-        test_dataset,
-        batch_size=test_batch_size,
-    )
-
-    # Area Under the ROC Curve
-    auroc = BinaryAUROC()
-    # Area Under the Precision-Recall Curve
-    auprc = BinaryAUPRC()
-
-    for X, y in test_loader:
-        X = X.view(X.size(0), -1)
-
-        scores = arcus.predict(X)
-        auroc.update(scores, y)
-        auprc.update(scores, y)
-
-    logger.info(f"AUROC Score: {auroc.compute():0.3f}")
-    logger.info(f"AUPRC Score: {auprc.compute():0.3f}")
 
 
 if __name__ == "__main__":

@@ -5,9 +5,9 @@ from uuid import UUID
 import torch
 from torch import Tensor
 
-from ._anomaly_detector import AnomalyDetector
-from ._model import Model
-from .similarity import linear_CKA
+from .core._anomaly_detector import AnomalyDetector
+from .core._model import Model
+from .core.similarity import linear_CKA
 
 T = TypeVar("T", bound=Model)
 
@@ -22,6 +22,7 @@ class ARCUSModelPool(Generic[T]):
         super().__init__()
 
         self._detector = detector
+        self._reliability = 1.0
         self._reliability_threshold = reliability_threshold
         self._similarity_threshold = similarity_threshold
 
@@ -102,6 +103,11 @@ class ARCUSModelPool(Generic[T]):
                     max_sim = sim
 
         return max_id, max_sim
+
+    def find_most_reliable_model(self) -> UUID:
+        models = self.get_models()
+        model = max(models, key=lambda model: model.reliability)
+        return model.model_id
 
     def compress(self, X: Tensor, dst_id: UUID) -> bool:
         """

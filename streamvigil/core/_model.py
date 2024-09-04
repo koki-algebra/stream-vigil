@@ -10,7 +10,7 @@ from streamvigil.core import AnomalyDetector
 class Model(ABC):
     def __init__(self, detector: AnomalyDetector) -> None:
         self._model_id = uuid.uuid4()
-        self._reliability = 0.0
+        self._reliability = 1.0
 
         self._detector = detector
 

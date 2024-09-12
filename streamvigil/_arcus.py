@@ -1,10 +1,11 @@
 from logging import getLogger
 from uuid import UUID
+
 from torch import Tensor
 
+from ._arcus_model import ARCUSModel
 from ._arcus_model_pool import ARCUSModelPool
 from .core._anomaly_detector import AnomalyDetector
-from .core._model import Model
 
 
 class ARCUS:
@@ -16,7 +17,7 @@ class ARCUS:
         similarity_threshold=0.8,
     ) -> None:
         self.logger = logger
-        self.model_pool = ARCUSModelPool[Model](
+        self.model_pool = ARCUSModelPool[ARCUSModel](
             detector,
             reliability_threshold,
             similarity_threshold,

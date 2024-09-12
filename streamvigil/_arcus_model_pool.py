@@ -6,10 +6,10 @@ import torch
 from torch import Tensor
 
 from .core._anomaly_detector import AnomalyDetector
-from .core._model import Model
+from ._arcus_model import ARCUSModel
 from .core.similarity import linear_CKA
 
-T = TypeVar("T", bound=Model)
+T = TypeVar("T", bound=ARCUSModel)
 
 
 class ARCUSModelPool(Generic[T]):
@@ -38,7 +38,7 @@ class ARCUSModelPool(Generic[T]):
         return model.model_id
 
     def _create_model(self, detector: AnomalyDetector) -> T:
-        return Model(detector)  # type: ignore
+        return ARCUSModel(detector)  # type: ignore
 
     def get_model(self, model_id: UUID) -> T:
         return self._pool[model_id]

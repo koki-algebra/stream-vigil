@@ -1,5 +1,5 @@
 from logging import getLogger
-
+from uuid import UUID
 from torch import Tensor
 
 from ._arcus_model_pool import ARCUSModelPool
@@ -22,9 +22,9 @@ class ARCUS:
             similarity_threshold,
         )
 
-    def init(self):
+    def init(self) -> UUID:
         # Add initial model
-        self.model_pool.add_model()
+        return self.model_pool.add_model()
 
     def stream_train(self, X: Tensor, is_logging=False):
         if self.model_pool.is_drift():

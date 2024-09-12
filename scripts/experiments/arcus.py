@@ -31,7 +31,7 @@ def main():
     detector = BasicDetector(auto_encoder)
 
     arcus = ARCUS(detector, logger)
-    arcus.init()
+    initial_model_id = arcus.init()
 
     # Dataset
     transform = transforms.Compose([transforms.ToTensor()])
@@ -46,17 +46,20 @@ def main():
         batch_size=train_batch_size,
     )
 
+    # Train initial model
+    logger.info("start training the initial model")
+    for batch, (X, _) in enumerate(train_loader):
+        X = X.view(X.size(0), -1)
+        arcus.model_pool.stream_train(initial_model_id, X)
+    logger.info("finish training initial model")
+
     # Training
     for epoch in range(epochs):
         print(f"Epoch: {epoch}")
         for batch, (X, _) in enumerate(train_loader):
             X = X.view(X.size(0), -1)
 
-            if batch != 0:
-                if batch % 100 == 0:
-                    arcus.update_reliability(X, is_logging=True)
-                else:
-                    arcus.update_reliability(X)
+            arcus.update_reliability(X, is_logging=True)
 
             if batch % 100 == 0:
                 arcus.stream_train(X, is_logging=True)

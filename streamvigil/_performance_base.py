@@ -8,8 +8,8 @@ from streamvigil.core import AnomalyDetector, Model, ModelPool
 
 
 class PerformanceBaseModelPool(ModelPool[Model]):
-    def __init__(self, detector: AnomalyDetector, reliability_threshold=0.95, similarity_threshold=0.8) -> None:
-        super().__init__(detector, reliability_threshold, similarity_threshold)
+    def __init__(self, detector: AnomalyDetector, similarity_threshold=0.8) -> None:
+        super().__init__(detector, similarity_threshold)
 
     def select_model(self, X: Tensor, y: Tensor) -> UUID:
         """

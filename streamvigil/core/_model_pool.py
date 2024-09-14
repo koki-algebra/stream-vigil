@@ -55,9 +55,15 @@ class ModelPool(Generic[T]):
 
         self._current_model_id = model_id
 
-    def find_adapted_model(self) -> UUID:
-        # TODO: impl
-        pass
+    def find_adapted_model(self) -> UUID | None:
+        for model in self.get_models():
+            if model.model_id == self.current_model_id:
+                continue
+
+            if model.is_adapted():
+                return model.model_id
+
+        return None
 
     def similarity(self, X: Tensor, model_id1: UUID, model_id2: UUID) -> float:
         model1 = self.get_model(model_id1)

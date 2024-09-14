@@ -153,13 +153,17 @@ class ModelPool(Generic[T]):
         return False
 
     def stream_train(self, X: Tensor) -> Tensor:
-        model = self.get_model(self.current_model_id)
+        current_model = self.get_model(self.current_model_id)
 
         # Train the model
-        loss = model.stream_train(X)
+        loss = current_model.stream_train(X)
+
+        # Update last trained window
+        scores = current_model.predict(X)
+        current_model.last_trained_window.push(scores)
 
         # Increment the number of batches used for training
-        model.num_batches += 1
+        current_model.num_batches += 1
 
         return loss
 
@@ -170,5 +174,11 @@ class ModelPool(Generic[T]):
         return loss
 
     def predict(self, X: Tensor) -> Tensor:
+        # Update latest window
+        for model in self.get_models():
+            scores = model.predict(X)
+            model.latest_window.push(scores)
+
         current_model = self.get_model(self.current_model_id)
+
         return current_model.predict(X)

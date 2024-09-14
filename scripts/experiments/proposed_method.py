@@ -55,6 +55,13 @@ def main():
         model_pool.stream_train(X)
     logger.info("finish training initial model")
 
+    # Training
+    for epoch in range(epochs):
+        print(f"Epoch: {epoch}")
+        for batch, (X, _) in enumerate(train_loader):
+            X = X.view(X.size(0), -1)
+
+
 
 if __name__ == "__main__":
     main()

@@ -11,9 +11,9 @@ class Model:
     def __init__(
         self,
         detector: AnomalyDetector,
-        historical_window_size=10000,
-        latest_window_size=10000,
-        last_trained_size=10000,
+        historical_window_size=1000,
+        latest_window_size=1000,
+        last_trained_size=1000,
         drift_alpha=0.05,
         adapted_alpha=0.05,
     ) -> None:

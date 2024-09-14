@@ -1,4 +1,5 @@
 import copy
+from collections import deque
 from typing import Dict, Generic, List, TypeVar
 from uuid import UUID
 
@@ -20,18 +21,21 @@ class ModelPool(Generic[T]):
         historical_window_size=10000,
         latest_window_size=10000,
         last_trained_size=10000,
+        window_gap=1000,
         drift_alpha=0.05,
         adapted_alpha=0.05,
     ) -> None:
         self._detector = detector
-        self._reliability = 1.0
         self._similarity_threshold = similarity_threshold
 
         self._historical_window_size = historical_window_size
         self._latest_window_size = latest_window_size
         self._last_trained_size = last_trained_size
+        self._window_gap = window_gap
         self._drift_alpha = drift_alpha
         self._adapted_alpha = adapted_alpha
+
+        self._window_buffer = deque[float](maxlen=window_gap)
 
         self._pool: Dict[UUID, T] = {}
 
@@ -158,14 +162,27 @@ class ModelPool(Generic[T]):
         # Train the model
         loss = current_model.stream_train(X)
 
-        # Update last trained window
-        scores = current_model.predict(X)
-        current_model.last_trained_window.push(scores)
-
         # Increment the number of batches used for training
         current_model.num_batches += 1
 
         return loss
+
+    def update_window(self, X: Tensor):
+        for model in self.get_models():
+            scores = model.predict(X)
+            for score in scores.tolist():
+                # Update latest window
+                model.latest_window.push(score)
+
+                if len(self._window_buffer) == self._latest_window_size + self._window_gap:
+                    # Update historical window
+                    model.historical_window.push(self._window_buffer.popleft())
+
+                self._window_buffer.append(score)
+
+            if model.model_id == self.current_model_id:
+                # Update last trained window
+                model.last_trained_window.push(score)
 
     def batch_train(self, model_id: UUID, X: Tensor, y: Tensor) -> Tensor:
         model = self.get_model(model_id)
@@ -174,11 +191,6 @@ class ModelPool(Generic[T]):
         return loss
 
     def predict(self, X: Tensor) -> Tensor:
-        # Update latest window
-        for model in self.get_models():
-            scores = model.predict(X)
-            model.latest_window.push(scores)
-
         current_model = self.get_model(self.current_model_id)
 
         return current_model.predict(X)

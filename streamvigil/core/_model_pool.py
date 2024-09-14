@@ -17,10 +17,21 @@ class ModelPool(Generic[T]):
         self,
         detector: AnomalyDetector,
         similarity_threshold=0.8,
+        historical_window_size=10000,
+        latest_window_size=10000,
+        last_trained_size=10000,
+        drift_alpha=0.05,
+        adapted_alpha=0.05,
     ) -> None:
         self._detector = detector
         self._reliability = 1.0
         self._similarity_threshold = similarity_threshold
+
+        self._historical_window_size = historical_window_size
+        self._latest_window_size = latest_window_size
+        self._last_trained_size = last_trained_size
+        self._drift_alpha = drift_alpha
+        self._adapted_alpha = adapted_alpha
 
         self._pool: Dict[UUID, T] = {}
 
@@ -36,7 +47,14 @@ class ModelPool(Generic[T]):
         return model.model_id
 
     def _create_model(self, detector: AnomalyDetector) -> T:
-        return Model(detector)  # type: ignore
+        return Model(
+            detector,
+            historical_window_size=self._historical_window_size,
+            latest_window_size=self._latest_window_size,
+            last_trained_size=self._last_trained_size,
+            drift_alpha=self._drift_alpha,
+            adapted_alpha=self._adapted_alpha,
+        )  # type: ignore
 
     def get_model(self, model_id: UUID) -> T:
         return self._pool[model_id]
@@ -46,7 +64,7 @@ class ModelPool(Generic[T]):
 
     @property
     def current_model_id(self):
-        self._current_model_id
+        return self._current_model_id
 
     @current_model_id.setter
     def current_model_id(self, model_id: UUID):
@@ -134,8 +152,8 @@ class ModelPool(Generic[T]):
 
         return False
 
-    def stream_train(self, model_id: UUID, X: Tensor) -> Tensor:
-        model = self.get_model(model_id)
+    def stream_train(self, X: Tensor) -> Tensor:
+        model = self.get_model(self.current_model_id)
 
         # Train the model
         loss = model.stream_train(X)

@@ -16,15 +16,15 @@ class ModelPool(Generic[T]):
     def __init__(
         self,
         detector: AnomalyDetector,
-        reliability_threshold=0.95,
         similarity_threshold=0.8,
     ) -> None:
         self._detector = detector
         self._reliability = 1.0
-        self._reliability_threshold = reliability_threshold
         self._similarity_threshold = similarity_threshold
 
         self._pool: Dict[UUID, T] = {}
+
+        self._current_model_id = self.add_model()
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -44,11 +44,26 @@ class ModelPool(Generic[T]):
     def get_models(self) -> List[T]:
         return list(self._pool.values())
 
-    def is_drift(self) -> bool:
-        """
-        Whether concept drift is occurring.
-        """
-        return self._reliability < self._reliability_threshold
+    @property
+    def current_model_id(self):
+        self._current_model_id
+
+    @current_model_id.setter
+    def current_model_id(self, model_id: UUID):
+        if model_id not in self._pool:
+            raise ValueError(f"model_id {model_id} does not exist in the model pool")
+
+        self._current_model_id = model_id
+
+    def find_adapted_model(self) -> UUID | None:
+        for model in self.get_models():
+            if model.model_id == self.current_model_id:
+                continue
+
+            if model.is_adapted():
+                return model.model_id
+
+        return None
 
     def similarity(self, X: Tensor, model_id1: UUID, model_id2: UUID) -> float:
         model1 = self.get_model(model_id1)
@@ -125,10 +140,6 @@ class ModelPool(Generic[T]):
         # Train the model
         loss = model.stream_train(X)
 
-        # Update the last batch scores
-        scores = model.predict(X)
-        model.update_last_batch_scores(scores)
-
         # Increment the number of batches used for training
         model.num_batches += 1
 
@@ -140,37 +151,6 @@ class ModelPool(Generic[T]):
 
         return loss
 
-    def update_reliability(self, X: Tensor):
-        """
-        Update the reliability of each model and the entire model pool.
-        """
-        X = X.to(self.device)
-
-        tmp = 1.0
-
-        for model in self.get_models():
-            scores = model.predict(X)
-            model.update_reliability(scores)
-
-            tmp *= 1 - model.reliability
-
-        self._reliability = 1 - tmp
-
     def predict(self, X: Tensor) -> Tensor:
-        # Small value to avoid division by zero. Default: 1e-8
-        eps = 1e-8
-
-        X = X.to(self.device)
-
-        anomaly_scores = torch.zeros(X.shape[0], device=self.device)
-
-        for model in self.get_models():
-            # Predict the anomaly scores
-            scores = model.predict(X)
-
-            # Standardized square error
-            scores = (scores - scores.mean()) / (scores.std() + eps)
-
-            anomaly_scores += scores * model.reliability
-
-        return anomaly_scores
+        current_model = self.get_model(self.current_model_id)
+        return current_model.predict(X)

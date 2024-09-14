@@ -1,7 +1,6 @@
 from collections import deque
 from typing import List
 
-from torch import Tensor
 
 
 class Window:
@@ -9,11 +8,10 @@ class Window:
         self.max_size = max_size
         self._window: deque[float] = deque(maxlen=max_size)
 
-    def push(self, scores: Tensor) -> None:
-        for score in scores.tolist():
-            if len(self._window) == self.max_size:
-                self._window.popleft()
-            self._window.append(score)
+    def push(self, item: float) -> None:
+        if len(self._window) == self.max_size:
+            self._window.popleft()
+        self._window.append(item)
 
     def get_items(self) -> List[float]:
         return list(self._window)

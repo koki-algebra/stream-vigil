@@ -61,6 +61,8 @@ def main():
         for batch, (X, _) in enumerate(train_loader):
             X = X.view(X.size(0), -1)
 
+            model_pool.stream_train(X)
+            model_pool.update_window(X)
 
 
 if __name__ == "__main__":

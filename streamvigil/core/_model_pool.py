@@ -35,7 +35,7 @@ class ModelPool(Generic[T]):
         self._drift_alpha = drift_alpha
         self._adapted_alpha = adapted_alpha
 
-        self._window_buffer = deque[float](maxlen=window_gap)
+        self._window_buffer = deque[float](maxlen=window_gap + latest_window_size)
 
         self._pool: Dict[UUID, T] = {}
 

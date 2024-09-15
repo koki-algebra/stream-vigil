@@ -22,8 +22,7 @@ class ModelPool(Generic[T]):
         latest_window_size=1000,
         last_trained_size=1000,
         window_gap=1000,
-        drift_alpha=0.05,
-        adapted_alpha=0.05,
+        alpha=0.05,
     ) -> None:
         self._detector = detector
         self._similarity_threshold = similarity_threshold
@@ -32,8 +31,7 @@ class ModelPool(Generic[T]):
         self._latest_window_size = latest_window_size
         self._last_trained_size = last_trained_size
         self._window_gap = window_gap
-        self._drift_alpha = drift_alpha
-        self._adapted_alpha = adapted_alpha
+        self._alpha = alpha
 
         self._window_buffer = deque[float](maxlen=window_gap + latest_window_size)
 
@@ -56,8 +54,7 @@ class ModelPool(Generic[T]):
             historical_window_size=self._historical_window_size,
             latest_window_size=self._latest_window_size,
             last_trained_size=self._last_trained_size,
-            drift_alpha=self._drift_alpha,
-            adapted_alpha=self._adapted_alpha,
+            alpha=self._alpha,
         )  # type: ignore
 
     def get_model(self, model_id: UUID) -> T:

@@ -72,7 +72,7 @@ class Model:
             self.latest_window.get_items(),
         )
 
-        return p_value < self._adapted_alpha
+        return p_value > self._adapted_alpha
 
     def encode(self, X: Tensor) -> Tensor:
         return self._detector.encode(X)

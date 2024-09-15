@@ -12,7 +12,7 @@ from streamvigil.utils import set_seed
 RANDOM_STATE = 80
 TRAIN_BATCH_SIZE = 128
 EPOCHS = 5
-INIT_BATCHES = 10
+INIT_BATCHES = 100
 
 
 def main():

@@ -100,4 +100,4 @@ class BasicDetector(AnomalyDetector):
         X = X.to(self.device)
         X_pred, _ = self._auto_encoder(X)
 
-        return (X - X_pred).pow(2).sum(dim=1)
+        return (X - X_pred).pow(2).mean(dim=1)

@@ -54,7 +54,8 @@ class Model:
 
     def is_drift(self) -> bool:
         """
-        Test whether the historical window and the latest window are significantly different
+        Test whether the historical window and the latest window are significantly different.
+        If there is a significant difference between them, it is considered that concept drift is occurring.
         """
         _, p_value = stats.mannwhitneyu(
             self.historical_window.get_items(),
@@ -65,7 +66,8 @@ class Model:
 
     def is_adapted(self) -> bool:
         """
-        Test whether the last trained window and the latest window are significantly different
+        Test whether the last trained window and the latest window are significantly different.
+        If there is no significant difference, it is considered to have been adapted.
         """
         _, p_value = stats.mannwhitneyu(
             self.last_trained_window.get_items(),

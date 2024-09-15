@@ -180,9 +180,9 @@ class ModelPool(Generic[T]):
 
                 self._window_buffer.append(score)
 
-            if model.model_id == self.current_model_id:
-                # Update last trained window
-                model.last_trained_window.push(score)
+                if model.model_id == self.current_model_id:
+                    # Update last trained window
+                    model.last_trained_window.push(score)
 
     def batch_train(self, model_id: UUID, X: Tensor, y: Tensor) -> Tensor:
         model = self.get_model(model_id)

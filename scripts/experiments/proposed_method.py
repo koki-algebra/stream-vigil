@@ -9,16 +9,14 @@ from streamvigil.core import Model, ModelPool
 from streamvigil.detectors import BasicAutoEncoder, BasicDetector
 from streamvigil.utils import set_seed
 
-train_batch_size = 128
-test_batch_size = 64
-epochs = 5
-
+RANDOM_STATE = 80
+TRAIN_BATCH_SIZE = 128
+EPOCHS = 5
 INIT_BATCHES = 10
 
 
 def main():
-    random_state = 80
-    set_seed(random_state)
+    set_seed(RANDOM_STATE)
 
     with open("./notebooks/logging.yml", encoding="utf-8") as file:
         config = safe_load(file)
@@ -35,7 +33,7 @@ def main():
     )
     train_loader = DataLoader(
         train_dataset,
-        batch_size=train_batch_size,
+        batch_size=TRAIN_BATCH_SIZE,
     )
 
     auto_encoder = BasicAutoEncoder(
@@ -49,7 +47,7 @@ def main():
     model_pool = ModelPool[Model](detector)
 
     # Training
-    for epoch in range(epochs):
+    for epoch in range(EPOCHS):
         print(f"Epoch: {epoch}")
         for batch, (X, _) in enumerate(train_loader):
             X = X.view(X.size(0), -1)

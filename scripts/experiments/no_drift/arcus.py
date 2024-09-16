@@ -59,7 +59,7 @@ def main():
         for batch, (X, _) in enumerate(train_loader):
             X = X.view(X.size(0), -1)
 
-            arcus.update_reliability(X, is_logging=True)
+            arcus.update_reliability(X)
 
             if batch % 100 == 0:
                 arcus.stream_train(X, is_logging=True)

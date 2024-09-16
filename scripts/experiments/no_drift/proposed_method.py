@@ -46,6 +46,9 @@ def main():
     # Model Pool
     model_pool = ModelPool[Model](detector)
 
+    # Number of false positives
+    fp_cnt = 0
+
     # Training
     for epoch in range(EPOCHS):
         print(f"Epoch: {epoch}")
@@ -61,6 +64,8 @@ def main():
                 if current_model.is_drift():
                     logger.info("concept drift detected!")
 
+                    fp_cnt += 1
+
                     adapted_model_id = model_pool.find_adapted_model()
                     if adapted_model_id is not None:
                         model_pool.current_model_id = adapted_model_id
@@ -75,6 +80,8 @@ def main():
 
             # Train current model
             model_pool.stream_train(X)
+
+    logger.info(f"Number of false positives: {fp_cnt}")
 
 
 if __name__ == "__main__":

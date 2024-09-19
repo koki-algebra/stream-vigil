@@ -22,7 +22,7 @@ class ModelPool(Generic[T]):
         latest_window_size=1000,
         last_trained_size=1000,
         window_gap=1000,
-        alpha=0.05,
+        alpha=0.001,
     ) -> None:
         self._detector = detector
         self._similarity_threshold = similarity_threshold

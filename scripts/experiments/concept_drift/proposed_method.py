@@ -7,7 +7,7 @@ from yaml import safe_load
 
 from streamvigil.core import Model, ModelPool
 from streamvigil.detectors import BasicAutoEncoder, BasicDetector
-from streamvigil.utils import set_seed
+from streamvigil.utils import filter_by_label, set_seed
 
 RANDOM_STATE = 80
 TRAIN_BATCH_SIZE = 128
@@ -30,6 +30,11 @@ def main():
         train=True,
         download=True,
         transform=transform,
+    )
+    train_dataset = filter_by_label(
+        train_dataset,
+        normal_labels=[3, 4],
+        anomaly_labels=[5],
     )
     train_loader = DataLoader(
         train_dataset,

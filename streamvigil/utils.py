@@ -28,8 +28,8 @@ def filter_by_label(
     anomaly_labels: List[int],
     anomaly_ratio: float = 0.05,
 ):
-    normal_idx = torch.where(torch.isin(dataset.targets, torch.tensor(normal_labels)))[0]
-    anomaly_idx = torch.where(torch.isin(dataset.targets, torch.tensor(anomaly_labels)))[0]
+    normal_idx = torch.where(torch.isin(dataset.targets, torch.tensor(normal_labels)))[0].tolist()
+    anomaly_idx = torch.where(torch.isin(dataset.targets, torch.tensor(anomaly_labels)))[0].tolist()
 
     total_samples = len(normal_idx) + len(anomaly_idx)
     desired_anomaly_samples = int(total_samples * anomaly_ratio)

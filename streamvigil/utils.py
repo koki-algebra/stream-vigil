@@ -28,16 +28,16 @@ def filter_by_label(
     anomaly_labels: List[int],
     anomaly_ratio: float = 0.05,
 ):
-    normal_indices = [i for i, target in enumerate(dataset.targets) if target in normal_labels]
-    anomaly_indices = [i for i, target in enumerate(dataset.targets) if target in anomaly_labels]
+    normal_idx = torch.where(torch.isin(dataset.targets, torch.tensor(normal_labels)))[0]
+    anomaly_idx = torch.where(torch.isin(dataset.targets, torch.tensor(anomaly_labels)))[0]
 
-    total_samples = len(normal_indices) + len(anomaly_indices)
+    total_samples = len(normal_idx) + len(anomaly_idx)
     desired_anomaly_samples = int(total_samples * anomaly_ratio)
 
-    if len(anomaly_indices) > desired_anomaly_samples:
-        anomaly_indices = random.sample(anomaly_indices, desired_anomaly_samples)
+    if len(anomaly_idx) > desired_anomaly_samples:
+        anomaly_idx = random.sample(anomaly_idx, desired_anomaly_samples)
 
-    selected_indices = normal_indices + anomaly_indices
+    selected_indices = normal_idx + anomaly_idx
 
     filtered_dataset = deepcopy(dataset)
     filtered_dataset.data = filtered_dataset.data[selected_indices]

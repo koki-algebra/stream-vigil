@@ -2,7 +2,6 @@ from collections import deque
 from typing import List
 
 
-
 class Window:
     def __init__(self, max_size: int) -> None:
         self.max_size = max_size

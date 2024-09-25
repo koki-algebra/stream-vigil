@@ -11,7 +11,7 @@ from streamvigil.utils import filter_index, set_seed
 
 RANDOM_STATE = 80
 TRAIN_BATCH_SIZE = 128
-INIT_BATCHES = 25
+INIT_BATCHES = 20
 
 
 def main():
@@ -57,10 +57,16 @@ def main():
     detector = BasicDetector(auto_encoder)
 
     # Model Pool
-    model_pool = ModelPool[Model](detector)
+    model_pool = ModelPool[Model](
+        detector,
+        historical_window_size=500,
+        latest_window_size=500,
+        last_trained_size=500,
+        window_gap=500,
+    )
 
     # Training
-    for batch, (X, y) in enumerate(train_loader):
+    for X, y in train_loader:
         X = X.view(X.size(0), -1)
 
         model_pool.update_window(X)
@@ -68,6 +74,8 @@ def main():
         current_model = model_pool.get_model(model_pool.current_model_id)
 
         if current_model.num_batches > INIT_BATCHES:
+            print("y:", y)
+
             # Concept Drift detection
             if current_model.is_drift():
                 logger.info("concept drift detected!")

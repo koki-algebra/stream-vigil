@@ -11,8 +11,7 @@ from streamvigil.utils import set_seed
 
 RANDOM_STATE = 80
 TRAIN_BATCH_SIZE = 128
-EPOCHS = 5
-INIT_BATCHES = 25
+INIT_BATCHES = 20
 
 
 def main():
@@ -25,7 +24,7 @@ def main():
 
     # Dataset
     transform = transforms.Compose([transforms.ToTensor()])
-    train_dataset = datasets.MNIST(
+    train_dataset = datasets.FashionMNIST(
         root="./data/pytorch",
         train=True,
         download=True,
@@ -51,36 +50,34 @@ def main():
     fp_cnt = 0
 
     # Training
-    for epoch in range(EPOCHS):
-        print(f"Epoch: {epoch}")
-        for batch, (X, _) in enumerate(train_loader):
-            X = X.view(X.size(0), -1)
+    for X, _ in train_loader:
+        X = X.view(X.size(0), -1)
 
-            model_pool.update_window(X)
+        model_pool.update_window(X)
 
-            current_model = model_pool.get_model(model_pool.current_model_id)
+        current_model = model_pool.get_model(model_pool.current_model_id)
 
-            if current_model.num_batches > INIT_BATCHES:
-                # Concept Drift detection
-                if current_model.is_drift():
-                    logger.info("concept drift detected!")
+        if current_model.num_batches > INIT_BATCHES:
+            # Concept Drift detection
+            if current_model.is_drift():
+                logger.info("concept drift detected!")
 
-                    fp_cnt += 1
+                fp_cnt += 1
 
-                    adapted_model_id = model_pool.find_adapted_model()
-                    if adapted_model_id is not None:
-                        model_pool.current_model_id = adapted_model_id
+                adapted_model_id = model_pool.find_adapted_model()
+                if adapted_model_id is not None:
+                    model_pool.current_model_id = adapted_model_id
 
-                        logger.info(f"find adapted model: {adapted_model_id}")
-                    else:
-                        # Add new model
-                        new_model_id = model_pool.add_model()
-                        model_pool.current_model_id = new_model_id
+                    logger.info(f"find adapted model: {adapted_model_id}")
+                else:
+                    # Add new model
+                    new_model_id = model_pool.add_model()
+                    model_pool.current_model_id = new_model_id
 
-                        logger.info(f"add new model: {new_model_id}")
+                    logger.info(f"add new model: {new_model_id}")
 
-            # Train current model
-            model_pool.stream_train(X)
+        # Train current model
+        model_pool.stream_train(X)
 
     logger.info(f"Number of false positives: {fp_cnt}")
 

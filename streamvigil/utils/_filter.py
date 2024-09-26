@@ -10,7 +10,7 @@ def filter_mnist(
     dataset: MNIST,
     normal_labels: List[int],
     anomaly_labels: List[int],
-    anomaly_ratio: float = 0.05,
+    anomaly_ratio: float = 0.01,
 ):
     selected_idx = filter_index(
         dataset.targets,
@@ -33,7 +33,7 @@ def filter_index(
     origin_labels: torch.Tensor,
     normal_labels: List[int],
     anomaly_labels: List[int],
-    anomaly_ratio=0.05,
+    anomaly_ratio=0.01,
 ):
     normal_idx = torch.where(torch.isin(origin_labels, torch.tensor(normal_labels)))[0].tolist()
     anomaly_idx = torch.where(torch.isin(origin_labels, torch.tensor(anomaly_labels)))[0].tolist()

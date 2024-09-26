@@ -34,9 +34,13 @@ def filter_index(
     normal_labels: List[int],
     anomaly_labels: List[int],
     anomaly_ratio=0.01,
+    sample_size=1.0,
 ):
     normal_idx = torch.where(torch.isin(origin_labels, torch.tensor(normal_labels)))[0].tolist()
     anomaly_idx = torch.where(torch.isin(origin_labels, torch.tensor(anomaly_labels)))[0].tolist()
+
+    if sample_size < 1.0 and sample_size > 0.0:
+        normal_idx = random.sample(normal_idx, int(len(normal_idx) * sample_size))
 
     total_samples = len(normal_idx) + len(anomaly_idx)
     desired_anomaly_samples = int(total_samples * anomaly_ratio)

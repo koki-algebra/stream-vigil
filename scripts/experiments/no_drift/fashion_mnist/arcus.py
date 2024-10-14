@@ -35,7 +35,7 @@ def main():
 
     # Dataset
     transform = transforms.Compose([transforms.ToTensor()])
-    train_dataset = datasets.MNIST(
+    train_dataset = datasets.FashionMNIST(
         root="./data/pytorch",
         train=True,
         download=True,
@@ -98,7 +98,7 @@ def main():
     ax2.tick_params(axis="y", labelcolor="#00A29C")
     ax2.set_ylim(0.0, 1.2)
 
-    plt.title("Changes in Training Loss and Reliability (MNIST)")
+    plt.title("Changes in Training Loss and Reliability (Fashion-MNIST)")
 
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()

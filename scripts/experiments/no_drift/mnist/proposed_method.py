@@ -1,6 +1,8 @@
 from logging import getLogger
 from logging.config import dictConfig
 
+import matplotlib.pyplot as plt
+import numpy as np
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from yaml import safe_load
@@ -55,6 +57,9 @@ def main():
     # Number of false positives
     fp_cnt = 0
 
+    losses = []
+    detected = []
+
     # Training
     for X, _ in train_loader:
         X = X.view(X.size(0), -1)
@@ -67,6 +72,8 @@ def main():
             # Concept Drift detection
             if current_model.is_drift():
                 logger.info("concept drift detected!")
+
+                detected.append(1)
 
                 fp_cnt += 1
 
@@ -81,11 +88,44 @@ def main():
                     model_pool.current_model_id = new_model_id
 
                     logger.info(f"add new model: {new_model_id}")
+            else:
+                detected.append(0)
 
         # Train current model
-        model_pool.stream_train(X)
+        loss = model_pool.stream_train(X)
+        losses.append(loss.detach())
 
     logger.info(f"Number of false positives: {fp_cnt}")
+
+    losses = np.array(losses)
+    detected = np.array(detected)
+
+    fig, ax1 = plt.subplots(figsize=(12, 6))
+
+    # Plot losses
+    color = "tab:blue"
+    ax1.set_xlabel("Iteration")
+    ax1.set_ylabel("Loss", color=color)
+    ax1.plot(range(len(losses)), losses, color=color, alpha=0.7)
+    ax1.tick_params(axis="y", labelcolor=color)
+
+    # Create a twin Axes for detected events
+    ax2 = ax1.twinx()
+    color = "tab:red"
+    ax2.set_ylabel("Drift Detected", color=color)
+
+    # Plot detected events
+    detected_indices = np.where(detected == 1)[0]
+    ax2.scatter(detected_indices, [1] * len(detected_indices), color=color, marker="o", s=50)
+
+    ax2.set_yticks([0, 1])
+    ax2.set_yticklabels(["", "Drift Detected"])
+    ax2.tick_params(axis="y", labelcolor=color)
+
+    # Set title and adjust layout
+    plt.title("Loss and Drift Detection over Iterations (MNIST)")
+    fig.tight_layout()
+    plt.show()
 
 
 if __name__ == "__main__":

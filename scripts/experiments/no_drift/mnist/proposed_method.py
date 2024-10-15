@@ -102,29 +102,27 @@ def main():
 
     fig, ax1 = plt.subplots(figsize=(12, 6))
 
-    # Plot losses
-    color = "tab:blue"
-    ax1.set_xlabel("Iteration")
-    ax1.set_ylabel("Loss", color=color)
-    ax1.plot(range(len(losses)), losses, color=color, alpha=0.7)
-    ax1.tick_params(axis="y", labelcolor=color)
+    ax1.plot(losses, color="#00ADD8", label="Losses")
+    ax1.set_xlabel("Iterations")
+    ax1.set_ylabel("Loss", color="#00ADD8")
+    ax1.tick_params(axis="y", labelcolor="#00ADD8")
 
-    # Create a twin Axes for detected events
+    # Create a twin axis for the detected scatter plot
     ax2 = ax1.twinx()
-    color = "tab:red"
-    ax2.set_ylabel("Drift Detected", color=color)
 
-    # Plot detected events
     detected_indices = np.where(detected == 1)[0]
-    ax2.scatter(detected_indices, [1] * len(detected_indices), color=color, marker="o", s=50)
-
+    ax2.scatter(detected_indices, [1] * len(detected_indices), color="#CE3262", label="Drift Detected", alpha=0.6)
+    ax2.set_ylabel("Drift Detected", color="#CE3262")
+    ax2.tick_params(axis="y", labelcolor="#CE3262")
     ax2.set_yticks([0, 1])
-    ax2.set_yticklabels(["", "Drift Detected"])
-    ax2.tick_params(axis="y", labelcolor=color)
+    ax2.set_ylim(-0.1, 1.1)
 
-    # Set title and adjust layout
-    plt.title("Loss and Drift Detection over Iterations (MNIST)")
-    fig.tight_layout()
+    lines1, labels1 = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper left")
+
+    plt.title("Losses and Drift Detected over Iterations (MNIST)")
+    plt.tight_layout()
     plt.show()
 
 

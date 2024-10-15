@@ -2,6 +2,7 @@ from logging import getLogger
 from logging.config import dictConfig
 
 import matplotlib.pyplot as plt
+import numpy as np
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from yaml import safe_load
@@ -13,6 +14,10 @@ from streamvigil.utils import set_seed
 
 train_batch_size = 128
 test_batch_size = 64
+
+loss_color = "#00ADD8"
+reliability_color = "#00A29C"
+detected_color = "#CE3262"
 
 
 def main():
@@ -57,6 +62,7 @@ def main():
 
     reliabilities = []
     losses = []
+    detected = []
 
     # Training
     for batch, (X, _) in enumerate(train_loader):
@@ -74,39 +80,78 @@ def main():
 
             if model_pool.compress(X, model_id):
                 logger.info("model pool compressed!")
+
+            detected.append(1)
         else:
             model_id = model_pool.find_most_reliable_model()
             loss = model_pool.stream_train(model_id, X)
 
-        if init_model_id == model_id:
+            detected.append(0)
+
+        if model_id == init_model_id:
             model = model_pool.get_model(model_id)
             reliabilities.append(model.reliability)
             losses.append(loss.detach())
 
+    losses = np.array(losses)
+    reliabilities = np.array(reliabilities)
+    detected = np.array(detected[: len(losses) - 1])
+
+    # Plot 1: Losses and Reliabilities
     plt.figure(figsize=(12, 6))
+    fig1, ax1 = plt.subplots(figsize=(12, 6))
 
-    ax1 = plt.gca()
-    ax1.plot(losses, marker="o", linestyle="-", color="#00ADD8", markersize=3, label="Loss")
-    ax1.set_xlabel("Sample")
-    ax1.set_ylabel("Loss", color="#00ADD8")
-    ax1.tick_params(axis="y", labelcolor="#00ADD8")
-    ax1.set_ylim(0.0, 0.3)
+    ax1.plot(losses, color=loss_color, label="Losses")
+    ax1.set_ylabel("Loss", color=loss_color)
+    ax1.tick_params(axis="y", labelcolor=loss_color)
+    ax1.set_ylim(0.0, 0.5)
 
-    ax2 = ax1.twinx()
-    ax2.plot(reliabilities, marker="s", linestyle="-", color="#00A29C", markersize=3, label="Model Reliability")
-    ax2.set_ylabel("Model Reliability", color="#00A29C")
-    ax2.tick_params(axis="y", labelcolor="#00A29C")
-    ax2.set_ylim(0.0, 1.2)
+    ax1_twin = ax1.twinx()
+    ax1_twin.plot(reliabilities, color=reliability_color, label="Reliabilities")
+    ax1_twin.set_ylabel("Reliability", color=reliability_color)
+    ax1_twin.tick_params(axis="y", labelcolor=reliability_color)
+    ax1_twin.set_ylim(0.0, 1.2)
 
-    plt.title("Changes in Training Loss and Reliability (MNIST)")
+    ax1.set_title("Losses and Reliabilities (MNIST)")
+    ax1.set_xlabel("Iterations")
 
+    # Combine legends
     lines1, labels1 = ax1.get_legend_handles_labels()
-    lines2, labels2 = ax2.get_legend_handles_labels()
-    ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper right")
+    lines2, labels2 = ax1_twin.get_legend_handles_labels()
+    ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper left")
 
-    plt.grid(True)
     plt.tight_layout()
-    plt.show()
+    plt.savefig("losses_and_reliabilities.png")
+    plt.close(fig1)
+
+    # Plot 2: Losses and Detected
+    plt.figure(figsize=(12, 6))
+    fig2, ax2 = plt.subplots(figsize=(12, 6))
+
+    ax2.plot(losses, color=loss_color, label="Losses")
+    ax2.set_ylabel("Loss", color=loss_color)
+    ax2.tick_params(axis="y", labelcolor=loss_color)
+    ax2.set_ylim(0.0, 0.5)
+
+    ax2_twin = ax2.twinx()
+    detected_indices = np.where(detected == 1)[0]
+    ax2_twin.scatter(detected_indices, [1] * len(detected_indices), color=detected_color, label="Detected", alpha=0.6)
+    ax2_twin.set_ylabel("Detected", color=detected_color)
+    ax2_twin.tick_params(axis="y", labelcolor=detected_color)
+    ax2_twin.set_yticks([0, 1])
+    ax2_twin.set_ylim(-0.1, 1.1)
+
+    ax2.set_title("Losses and Detected Drift (MNIST)")
+    ax2.set_xlabel("Iterations")
+
+    # Combine legends
+    lines1, labels1 = ax2.get_legend_handles_labels()
+    lines2, labels2 = ax2_twin.get_legend_handles_labels()
+    ax2.legend(lines1 + lines2, labels1 + labels2, loc="upper left")
+
+    plt.tight_layout()
+    plt.savefig("losses_and_detected.png")
+    plt.close(fig2)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,8 @@
 from logging import getLogger
 from logging.config import dictConfig
 
+import matplotlib.pyplot as plt
+import numpy as np
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from yaml import safe_load
@@ -65,6 +67,9 @@ def main():
         window_gap=500,
     )
 
+    losses = []
+    detected = []
+
     # Training
     for X, y in train_loader:
         X = X.view(X.size(0), -1)
@@ -74,11 +79,11 @@ def main():
         current_model = model_pool.get_model(model_pool.current_model_id)
 
         if current_model.num_batches > INIT_BATCHES:
-            print("y:", y)
-
             # Concept Drift detection
             if current_model.is_drift():
                 logger.info("concept drift detected!")
+
+                detected.append(1)
 
                 adapted_model_id = model_pool.find_adapted_model()
                 if adapted_model_id is not None:
@@ -92,8 +97,41 @@ def main():
 
                     logger.info(f"add new model: {new_model_id}")
 
+        if not (current_model.num_batches > INIT_BATCHES and current_model.is_drift()):
+            detected.append(0)
+
         # Train current model
-        model_pool.stream_train(X)
+        loss = model_pool.stream_train(X)
+
+        losses.append(loss.detach())
+
+    losses = np.array(losses)
+    detected = np.array(detected)
+
+    fig, ax1 = plt.subplots(figsize=(12, 6))
+
+    ax1.plot(losses, color="#00ADD8", label="Losses")
+    ax1.set_xlabel("Iterations")
+    ax1.set_ylabel("Loss", color="#00ADD8")
+    ax1.tick_params(axis="y", labelcolor="#00ADD8")
+
+    # Create a twin axis for the detected scatter plot
+    ax2 = ax1.twinx()
+
+    detected_indices = np.where(detected == 1)[0]
+    ax2.scatter(detected_indices, [1] * len(detected_indices), color="#CE3262", label="Drift Detected", alpha=0.6)
+    ax2.set_ylabel("Drift Detected", color="#CE3262")
+    ax2.tick_params(axis="y", labelcolor="#CE3262")
+    ax2.set_yticks([0, 1])
+    ax2.set_ylim(-0.1, 1.1)
+
+    lines1, labels1 = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper left")
+
+    plt.title("Losses and Drift Detected over Iterations (MNIST)")
+    plt.tight_layout()
+    plt.show()
 
 
 if __name__ == "__main__":

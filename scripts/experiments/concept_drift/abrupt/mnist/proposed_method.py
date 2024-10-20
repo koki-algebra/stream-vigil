@@ -15,6 +15,9 @@ RANDOM_STATE = 80
 TRAIN_BATCH_SIZE = 128
 INIT_BATCHES = 20
 
+LOSS_COLOR = "#00ADD8"
+DETECTED_COLOR = "#CE3262"
+
 
 def main():
     set_seed(RANDOM_STATE)
@@ -110,18 +113,18 @@ def main():
 
     fig, ax1 = plt.subplots(figsize=(12, 6))
 
-    ax1.plot(losses, color="#00ADD8", label="Losses")
+    ax1.plot(losses, color=LOSS_COLOR, label="Losses")
     ax1.set_xlabel("Iterations")
-    ax1.set_ylabel("Loss", color="#00ADD8")
-    ax1.tick_params(axis="y", labelcolor="#00ADD8")
+    ax1.set_ylabel("Loss", color=LOSS_COLOR)
+    ax1.tick_params(axis="y", labelcolor=LOSS_COLOR)
 
     # Create a twin axis for the detected scatter plot
     ax2 = ax1.twinx()
 
     detected_indices = np.where(detected == 1)[0]
-    ax2.scatter(detected_indices, [1] * len(detected_indices), color="#CE3262", label="Drift Detected", alpha=0.6)
-    ax2.set_ylabel("Drift Detected", color="#CE3262")
-    ax2.tick_params(axis="y", labelcolor="#CE3262")
+    ax2.scatter(detected_indices, [1] * len(detected_indices), color=DETECTED_COLOR, label="Drift Detected", alpha=0.6)
+    ax2.set_ylabel("Drift Detected", color=DETECTED_COLOR)
+    ax2.tick_params(axis="y", labelcolor=DETECTED_COLOR)
     ax2.set_yticks([0, 1])
     ax2.set_ylim(-0.1, 1.1)
 
@@ -129,7 +132,7 @@ def main():
     lines2, labels2 = ax2.get_legend_handles_labels()
     ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper left")
 
-    plt.title("Losses and Drift Detected over Iterations (MNIST)")
+    plt.title("Abrupt Drift (MNIST)")
     plt.tight_layout()
     plt.show()
 

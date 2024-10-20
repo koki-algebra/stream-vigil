@@ -112,7 +112,7 @@ def main():
     ax1_twin.tick_params(axis="y", labelcolor=reliability_color)
     ax1_twin.set_ylim(0.0, 1.2)
 
-    ax1.set_title("Losses and Reliabilities (MNIST)")
+    ax1.set_title("No Drift (MNIST)")
     ax1.set_xlabel("Iterations")
 
     # Combine legends
@@ -141,7 +141,7 @@ def main():
     ax2_twin.set_yticks([0, 1])
     ax2_twin.set_ylim(-0.1, 1.1)
 
-    ax2.set_title("Losses and Detected Drift (MNIST)")
+    ax2.set_title("No Drift (MNIST)")
     ax2.set_xlabel("Iterations")
 
     # Combine legends

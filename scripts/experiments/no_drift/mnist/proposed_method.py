@@ -121,7 +121,7 @@ def main():
     lines2, labels2 = ax2.get_legend_handles_labels()
     ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper left")
 
-    plt.title("Losses and Drift Detected over Iterations (MNIST)")
+    plt.title("No Drift (MNIST)")
     plt.tight_layout()
     plt.show()
 

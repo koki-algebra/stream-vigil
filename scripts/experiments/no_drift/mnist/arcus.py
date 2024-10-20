@@ -15,9 +15,9 @@ from streamvigil.utils import set_seed
 train_batch_size = 128
 test_batch_size = 64
 
-loss_color = "#00ADD8"
-reliability_color = "#00A29C"
-detected_color = "#CE3262"
+LOSS_COLOR = "#00ADD8"
+RELIABILITY_COLOR = "#00A29C"
+DETECTED_COLOR = "#CE3262"
 
 
 def main():
@@ -101,15 +101,15 @@ def main():
     plt.figure(figsize=(12, 6))
     fig1, ax1 = plt.subplots(figsize=(12, 6))
 
-    ax1.plot(losses, color=loss_color, label="Losses")
-    ax1.set_ylabel("Loss", color=loss_color)
-    ax1.tick_params(axis="y", labelcolor=loss_color)
+    ax1.plot(losses, color=LOSS_COLOR, label="Losses")
+    ax1.set_ylabel("Loss", color=LOSS_COLOR)
+    ax1.tick_params(axis="y", labelcolor=LOSS_COLOR)
     ax1.set_ylim(0.0, 0.5)
 
     ax1_twin = ax1.twinx()
-    ax1_twin.plot(reliabilities, color=reliability_color, label="Reliabilities")
-    ax1_twin.set_ylabel("Reliability", color=reliability_color)
-    ax1_twin.tick_params(axis="y", labelcolor=reliability_color)
+    ax1_twin.plot(reliabilities, color=RELIABILITY_COLOR, label="Reliabilities")
+    ax1_twin.set_ylabel("Reliability", color=RELIABILITY_COLOR)
+    ax1_twin.tick_params(axis="y", labelcolor=RELIABILITY_COLOR)
     ax1_twin.set_ylim(0.0, 1.2)
 
     ax1.set_title("No Drift (MNIST)")
@@ -128,16 +128,16 @@ def main():
     plt.figure(figsize=(12, 6))
     fig2, ax2 = plt.subplots(figsize=(12, 6))
 
-    ax2.plot(losses, color=loss_color, label="Losses")
-    ax2.set_ylabel("Loss", color=loss_color)
-    ax2.tick_params(axis="y", labelcolor=loss_color)
+    ax2.plot(losses, color=LOSS_COLOR, label="Losses")
+    ax2.set_ylabel("Loss", color=LOSS_COLOR)
+    ax2.tick_params(axis="y", labelcolor=LOSS_COLOR)
     ax2.set_ylim(0.0, 0.5)
 
     ax2_twin = ax2.twinx()
     detected_indices = np.where(detected == 1)[0]
-    ax2_twin.scatter(detected_indices, [1] * len(detected_indices), color=detected_color, label="Detected", alpha=0.6)
-    ax2_twin.set_ylabel("Detected", color=detected_color)
-    ax2_twin.tick_params(axis="y", labelcolor=detected_color)
+    ax2_twin.scatter(detected_indices, [1] * len(detected_indices), color=DETECTED_COLOR, label="Detected", alpha=0.6)
+    ax2_twin.set_ylabel("Detected", color=DETECTED_COLOR)
+    ax2_twin.tick_params(axis="y", labelcolor=DETECTED_COLOR)
     ax2_twin.set_yticks([0, 1])
     ax2_twin.set_ylim(-0.1, 1.1)
 

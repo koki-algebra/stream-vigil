@@ -4,12 +4,13 @@ from logging.config import dictConfig
 import matplotlib.pyplot as plt
 import numpy as np
 from torch.utils.data import DataLoader
+from torcheval.metrics import BinaryAUPRC, BinaryAUROC
 from torchvision import datasets, transforms
 from yaml import safe_load
 
 from streamvigil.core import Model, ModelPool
 from streamvigil.detectors import BasicAutoEncoder, BasicDetector
-from streamvigil.utils import set_seed
+from streamvigil.utils import filter_index, set_seed, to_anomaly_labels
 
 RANDOM_STATE = 80
 TRAIN_BATCH_SIZE = 128
@@ -35,6 +36,20 @@ def main():
         download=True,
         transform=transform,
     )
+
+    # Filter label
+    train_filtered_idx = filter_index(
+        train_dataset.targets,
+        normal_labels=[1, 2, 3],
+        anomaly_labels=[7, 8, 9],
+    )
+    train_dataset.targets = to_anomaly_labels(
+        train_dataset.targets[train_filtered_idx],
+        normal_labels=[1, 2, 3],
+    )
+    train_dataset.data = train_dataset.data[train_filtered_idx]
+
+    # Data loader
     train_loader = DataLoader(
         train_dataset,
         batch_size=TRAIN_BATCH_SIZE,
@@ -57,19 +72,24 @@ def main():
         window_gap=500,
     )
 
-    # Number of false positives
-    fp_cnt = 0
-
     losses = []
     detected = []
 
+    auroc = BinaryAUROC()
+    auprc = BinaryAUPRC()
+
     # Training
-    for X, _ in train_loader:
+    for X, y in train_loader:
         X = X.view(X.size(0), -1)
 
         model_pool.update_window(X)
 
         current_model = model_pool.get_model(model_pool.current_model_id)
+
+        scores = current_model.predict(X)
+
+        auroc.update(scores, y)
+        auprc.update(scores, y)
 
         if current_model.num_batches > INIT_BATCHES:
             # Concept Drift detection
@@ -77,8 +97,6 @@ def main():
                 logger.info("concept drift detected!")
 
                 detected.append(1)
-
-                fp_cnt += 1
 
                 adapted_model_id = model_pool.find_adapted_model()
                 if adapted_model_id is not None:
@@ -98,7 +116,8 @@ def main():
         loss = model_pool.stream_train(X)
         losses.append(loss.detach())
 
-    logger.info(f"Number of false positives: {fp_cnt}")
+    print(f"AUROC: {auroc.compute():0.5f}")
+    print(f"AUPRC: {auprc.compute():0.5f}")
 
     losses = np.array(losses)
     detected = np.array(detected)

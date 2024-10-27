@@ -13,8 +13,8 @@ from streamvigil._arcus_model_pool import ARCUSModelPool
 from streamvigil.detectors import BasicAutoEncoder, BasicDetector
 from streamvigil.utils import filter_index, set_seed, to_anomaly_labels
 
-train_batch_size = 128
-test_batch_size = 64
+RANDOM_STATE = 80
+TRAIN_BATCH_SIZE = 128
 
 LOSS_COLOR = "#00ADD8"
 RELIABILITY_COLOR = "#00A29C"
@@ -22,8 +22,7 @@ DETECTED_COLOR = "#CE3262"
 
 
 def main():
-    random_state = 80
-    set_seed(random_state)
+    set_seed(RANDOM_STATE)
 
     with open("./notebooks/logging.yml", encoding="utf-8") as file:
         config = safe_load(file)
@@ -54,7 +53,7 @@ def main():
     # Data loader
     train_loader = DataLoader(
         train_dataset,
-        batch_size=train_batch_size,
+        batch_size=TRAIN_BATCH_SIZE,
     )
 
     auto_encoder = BasicAutoEncoder(

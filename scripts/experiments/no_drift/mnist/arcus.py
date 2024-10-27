@@ -4,13 +4,14 @@ from logging.config import dictConfig
 import matplotlib.pyplot as plt
 import numpy as np
 from torch.utils.data import DataLoader
+from torcheval.metrics import BinaryAUPRC, BinaryAUROC
 from torchvision import datasets, transforms
 from yaml import safe_load
 
 from streamvigil._arcus_model import ARCUSModel
 from streamvigil._arcus_model_pool import ARCUSModelPool
 from streamvigil.detectors import BasicAutoEncoder, BasicDetector
-from streamvigil.utils import set_seed
+from streamvigil.utils import filter_index, set_seed, to_anomaly_labels
 
 train_batch_size = 128
 test_batch_size = 64
@@ -29,15 +30,6 @@ def main():
     dictConfig(config)
     logger = getLogger(__name__)
 
-    auto_encoder = BasicAutoEncoder(
-        encoder_dims=[784, 588, 392, 196],
-        decoder_dims=[196, 392, 588, 784],
-        batch_norm=True,
-    )
-    detector = BasicDetector(auto_encoder)
-
-    model_pool = ARCUSModelPool[ARCUSModel](detector)
-
     # Dataset
     transform = transforms.Compose([transforms.ToTensor()])
     train_dataset = datasets.MNIST(
@@ -46,10 +38,33 @@ def main():
         download=True,
         transform=transform,
     )
+
+    # Filter label
+    train_filtered_idx = filter_index(
+        train_dataset.targets,
+        normal_labels=[1, 2, 3],
+        anomaly_labels=[7, 8, 9],
+    )
+    train_dataset.targets = to_anomaly_labels(
+        train_dataset.targets[train_filtered_idx],
+        normal_labels=[1, 2, 3],
+    )
+    train_dataset.data = train_dataset.data[train_filtered_idx]
+
+    # Data loader
     train_loader = DataLoader(
         train_dataset,
         batch_size=train_batch_size,
     )
+
+    auto_encoder = BasicAutoEncoder(
+        encoder_dims=[784, 588, 392, 196],
+        decoder_dims=[196, 392, 588, 784],
+        batch_norm=True,
+    )
+    detector = BasicDetector(auto_encoder)
+
+    model_pool = ARCUSModelPool[ARCUSModel](detector)
 
     # Train initial model
     init_model_id = model_pool.add_model()
@@ -64,11 +79,19 @@ def main():
     losses = []
     detected = []
 
+    auroc = BinaryAUROC()
+    auprc = BinaryAUPRC()
+
     # Training
-    for batch, (X, _) in enumerate(train_loader):
+    for X, y in train_loader:
         X = X.view(X.size(0), -1)
 
         model_pool.update_reliability(X)
+
+        scores = model_pool.predict(X)
+
+        auroc.update(scores, y)
+        auprc.update(scores, y)
 
         if model_pool.is_drift():
             logger.info("concept drift detected!")
@@ -92,6 +115,9 @@ def main():
             model = model_pool.get_model(model_id)
             reliabilities.append(model.reliability)
             losses.append(loss.detach())
+
+    print(f"AUROC: {auroc.compute():0.5f}")
+    print(f"AUPRC: {auprc.compute():0.5f}")
 
     losses = np.array(losses)
     reliabilities = np.array(reliabilities)

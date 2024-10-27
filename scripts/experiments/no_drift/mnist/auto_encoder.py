@@ -34,26 +34,22 @@ def main():
         normal_labels=[1, 2, 3],
         anomaly_labels=[7, 8, 9],
     )
-    train_dataset.targets[train_filtered_idx] = to_anomaly_labels(
+    train_dataset.targets = to_anomaly_labels(
         train_dataset.targets[train_filtered_idx],
         normal_labels=[1, 2, 3],
     )
+    train_dataset.data = train_dataset.data[train_filtered_idx]
 
     test_filterd_idx = filter_index(
         test_dataset.targets,
         normal_labels=[1, 2, 3],
         anomaly_labels=[0, 4, 5],
     )
-    test_dataset.targets[test_filterd_idx] = to_anomaly_labels(
+    test_dataset.targets = to_anomaly_labels(
         test_dataset.targets[test_filterd_idx],
         normal_labels=[1, 2, 3],
     )
-
-    train_dataset.data = train_dataset.data[train_filtered_idx]
-    train_dataset.targets = train_dataset.targets[train_filtered_idx]
-
     test_dataset.data = test_dataset.data[test_filterd_idx]
-    test_dataset.targets = test_dataset.targets[test_filterd_idx]
 
     # Data loader
     train_loader = DataLoader(

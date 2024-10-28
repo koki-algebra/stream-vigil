@@ -4,12 +4,13 @@ from logging.config import dictConfig
 import matplotlib.pyplot as plt
 import numpy as np
 from torch.utils.data import DataLoader
+from torcheval.metrics import BinaryAUPRC, BinaryAUROC
 from torchvision import datasets, transforms
 from yaml import safe_load
 
 from streamvigil.core import Model, ModelPool
 from streamvigil.detectors import BasicAutoEncoder, BasicDetector
-from streamvigil.utils import filter_index, set_seed
+from streamvigil.utils import filter_index, set_seed, to_anomaly_labels
 
 RANDOM_STATE = 80
 TRAIN_BATCH_SIZE = 128
@@ -54,6 +55,18 @@ def main():
         anomaly_labels=[7, 8, 9],
         sample_size=0.75,
     )
+    train_dataset.targets[concept_a_idx] = to_anomaly_labels(
+        train_dataset.targets[concept_a_idx],
+        normal_labels=[1, 2],
+    )
+    train_dataset.targets[concept_b_idx] = to_anomaly_labels(
+        train_dataset.targets[concept_b_idx],
+        normal_labels=[1, 2, 3, 4],
+    )
+    train_dataset.targets[concept_c_idx] = to_anomaly_labels(
+        train_dataset.targets[concept_c_idx],
+        normal_labels=[3, 4],
+    )
 
     result_idx = concept_a_idx + concept_b_idx + concept_c_idx
     train_dataset.data = train_dataset.data[result_idx]
@@ -80,6 +93,9 @@ def main():
         window_gap=500,
     )
 
+    auroc = BinaryAUROC()
+    auprc = BinaryAUPRC()
+
     losses = []
     detected = []
 
@@ -90,6 +106,11 @@ def main():
         model_pool.update_window(X)
 
         current_model = model_pool.get_model(model_pool.current_model_id)
+
+        scores = current_model.predict(X)
+
+        auroc.update(scores, y)
+        auprc.update(scores, y)
 
         if current_model.num_batches > INIT_BATCHES:
             # Concept Drift detection
@@ -120,6 +141,9 @@ def main():
 
     losses = np.array(losses)
     detected = np.array(detected)
+
+    print(f"AUROC: {auroc.compute():0.5f}")
+    print(f"AUPRC: {auprc.compute():0.5f}")
 
     fig, ax1 = plt.subplots(figsize=(12, 6))
 

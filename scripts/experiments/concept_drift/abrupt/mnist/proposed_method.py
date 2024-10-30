@@ -16,6 +16,11 @@ RANDOM_STATE = 80
 TRAIN_BATCH_SIZE = 128
 INIT_BATCHES = 20
 
+LATEST_WINDOW_SIZE = 500
+HISTORICAL_WINDOW_SIZE = 500
+LAST_TRAINED_WINDOW_SIZE = 500
+WINDOW_GAP = 500
+
 LOSS_COLOR = "#00ADD8"
 DETECTED_COLOR = "#CE3262"
 
@@ -74,10 +79,10 @@ def main():
     # Model Pool
     model_pool = ModelPool[Model](
         detector,
-        historical_window_size=500,
-        latest_window_size=500,
-        last_trained_size=500,
-        window_gap=500,
+        historical_window_size=HISTORICAL_WINDOW_SIZE,
+        latest_window_size=LATEST_WINDOW_SIZE,
+        last_trained_size=LAST_TRAINED_WINDOW_SIZE,
+        window_gap=WINDOW_GAP,
     )
 
     auroc = BinaryAUROC()

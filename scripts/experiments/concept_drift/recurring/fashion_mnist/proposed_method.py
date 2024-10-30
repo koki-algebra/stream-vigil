@@ -12,10 +12,10 @@ from streamvigil.core import Model, ModelPool
 from streamvigil.detectors import BasicAutoEncoder, BasicDetector
 from streamvigil.utils import filter_index, set_seed, to_anomaly_labels
 
-RANDOM_STATE = 150
+RANDOM_STATE = 80
 TRAIN_BATCH_SIZE = 128
-INIT_BATCHES = 20
-ALPHA = 0.05
+INIT_BATCHES = 80
+ALPHA = 0.001
 
 LATEST_WINDOW_SIZE = 500
 HISTORICAL_WINDOW_SIZE = 500

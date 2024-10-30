@@ -12,9 +12,18 @@ from streamvigil.core import Model, ModelPool
 from streamvigil.detectors import BasicAutoEncoder, BasicDetector
 from streamvigil.utils import filter_index, set_seed, to_anomaly_labels
 
-RANDOM_STATE = 84
+RANDOM_STATE = 150
 TRAIN_BATCH_SIZE = 128
 INIT_BATCHES = 20
+ALPHA = 0.05
+
+LATEST_WINDOW_SIZE = 500
+HISTORICAL_WINDOW_SIZE = 500
+LAST_TRAINED_WINDOW_SIZE = 500
+WINDOW_GAP = 500
+
+LOSS_COLOR = "#00ADD8"
+DETECTED_COLOR = "#CE3262"
 
 
 def main():
@@ -81,10 +90,11 @@ def main():
     # Model Pool
     model_pool = ModelPool[Model](
         detector,
-        historical_window_size=500,
-        latest_window_size=500,
-        last_trained_size=500,
-        window_gap=500,
+        historical_window_size=HISTORICAL_WINDOW_SIZE,
+        latest_window_size=LATEST_WINDOW_SIZE,
+        last_trained_size=LAST_TRAINED_WINDOW_SIZE,
+        window_gap=WINDOW_GAP,
+        alpha=ALPHA,
     )
 
     auroc = BinaryAUROC()
@@ -141,18 +151,18 @@ def main():
 
     fig, ax1 = plt.subplots(figsize=(12, 6))
 
-    ax1.plot(losses, color="#00ADD8", label="Losses")
+    ax1.plot(losses, color=LOSS_COLOR, label="Losses")
     ax1.set_xlabel("Iterations")
-    ax1.set_ylabel("Loss", color="#00ADD8")
-    ax1.tick_params(axis="y", labelcolor="#00ADD8")
+    ax1.set_ylabel("Loss", color=LOSS_COLOR)
+    ax1.tick_params(axis="y", labelcolor=LOSS_COLOR)
 
     # Create a twin axis for the detected scatter plot
     ax2 = ax1.twinx()
 
     detected_indices = np.where(detected == 1)[0]
-    ax2.scatter(detected_indices, [1] * len(detected_indices), color="#CE3262", label="Drift Detected", alpha=0.6)
-    ax2.set_ylabel("Drift Detected", color="#CE3262")
-    ax2.tick_params(axis="y", labelcolor="#CE3262")
+    ax2.scatter(detected_indices, [1] * len(detected_indices), color=DETECTED_COLOR, label="Drift Detected", alpha=0.6)
+    ax2.set_ylabel("Drift Detected", color=DETECTED_COLOR)
+    ax2.tick_params(axis="y", labelcolor=DETECTED_COLOR)
     ax2.set_yticks([0, 1])
     ax2.set_ylim(-0.1, 1.1)
 

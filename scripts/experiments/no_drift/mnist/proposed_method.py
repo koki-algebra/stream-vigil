@@ -16,6 +16,7 @@ RANDOM_STATE = 80
 
 TRAIN_BATCH_SIZE = 128
 INIT_BATCHES = 20
+ALPHA = 0.001
 
 LATEST_WINDOW_SIZE = 500
 HISTORICAL_WINDOW_SIZE = 500
@@ -76,6 +77,7 @@ def main():
         latest_window_size=LATEST_WINDOW_SIZE,
         last_trained_size=LAST_TRAINED_WINDOW_SIZE,
         window_gap=WINDOW_GAP,
+        alpha=ALPHA,
     )
 
     losses = []

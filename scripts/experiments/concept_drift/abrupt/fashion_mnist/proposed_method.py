@@ -13,6 +13,7 @@ from streamvigil.detectors import BasicAutoEncoder, BasicDetector
 from streamvigil.utils import filter_index, set_seed, to_anomaly_labels
 
 RANDOM_STATE = 80
+
 TRAIN_BATCH_SIZE = 128
 INIT_BATCHES = 20
 

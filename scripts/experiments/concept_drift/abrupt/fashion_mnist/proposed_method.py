@@ -15,8 +15,8 @@ from streamvigil.utils import filter_index, set_seed, to_anomaly_labels
 RANDOM_STATE = 80
 
 TRAIN_BATCH_SIZE = 128
-INIT_BATCHES = 20
-ALPHA = 0.001
+INIT_BATCHES = 100
+ALPHA = 0.05
 
 LATEST_WINDOW_SIZE = 500
 HISTORICAL_WINDOW_SIZE = 500

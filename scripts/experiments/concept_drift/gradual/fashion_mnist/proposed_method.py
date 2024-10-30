@@ -15,7 +15,8 @@ from streamvigil.utils import filter_index, set_seed, to_anomaly_labels
 RANDOM_STATE = 80
 
 TRAIN_BATCH_SIZE = 128
-INIT_BATCHES = 20
+INIT_BATCHES = 100
+ALPHA = 0.05
 
 LATEST_WINDOW_SIZE = 500
 HISTORICAL_WINDOW_SIZE = 500
@@ -97,6 +98,7 @@ def main():
         latest_window_size=LATEST_WINDOW_SIZE,
         last_trained_size=LAST_TRAINED_WINDOW_SIZE,
         window_gap=WINDOW_GAP,
+        alpha=ALPHA,
     )
 
     auroc = BinaryAUROC()

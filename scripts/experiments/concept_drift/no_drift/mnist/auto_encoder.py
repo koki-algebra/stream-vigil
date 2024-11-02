@@ -28,7 +28,7 @@ def main():
         transform=transform,
     )
 
-    # Label filtering
+    # Filter label
     train_filtered_idx = filter_index(
         train_dataset.targets,
         normal_labels=[1, 2, 3],
@@ -59,6 +59,7 @@ def main():
     test_loader = DataLoader(
         test_dataset,
         batch_size=TEST_BATCH_SIZE,
+        shuffle=True,
     )
 
     # Model

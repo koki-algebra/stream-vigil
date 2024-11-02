@@ -118,6 +118,9 @@ def main():
     losses = []
     detected = []
 
+    num_add_model = 0
+    num_find_model = 0
+
     # Training for concept A
     for X, y in train_a_loader:
         X = X.view(X.size(0), -1)
@@ -138,12 +141,16 @@ def main():
                     model_pool.current_model_id = adapted_model_id
 
                     logger.info(f"find adapted model: {adapted_model_id}")
+
+                    num_find_model += 1
                 else:
                     # Add new model
                     new_model_id = model_pool.add_model()
                     model_pool.current_model_id = new_model_id
 
                     logger.info(f"add new model: {new_model_id}")
+
+                    num_add_model += 1
 
         if not (current_model.num_batches > INIT_BATCHES and current_model.is_drift()):
             detected.append(0)
@@ -181,12 +188,16 @@ def main():
                     model_pool.current_model_id = adapted_model_id
 
                     logger.info(f"find adapted model: {adapted_model_id}")
+
+                    num_find_model += 1
                 else:
                     # Add new model
                     new_model_id = model_pool.add_model()
                     model_pool.current_model_id = new_model_id
 
                     logger.info(f"add new model: {new_model_id}")
+
+                    num_add_model += 1
 
         if not (current_model.num_batches > INIT_BATCHES and current_model.is_drift()):
             detected.append(0)
@@ -206,6 +217,9 @@ def main():
 
     print(f"AUROC: {auroc.compute():0.5f}")
     print(f"AUPRC: {auprc.compute():0.5f}")
+
+    print(f"num_add_model: {num_add_model}")
+    print(f"num_find_model: {num_find_model}")
 
     # Visualization
     losses = np.array(losses)

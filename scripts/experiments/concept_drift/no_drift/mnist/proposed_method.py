@@ -13,6 +13,9 @@ from streamvigil.detectors import BasicAutoEncoder, BasicDetector
 from streamvigil.utils import filter_index, set_seed, to_anomaly_labels
 
 RANDOM_STATE = 80
+TEST_BATCH_SIZE = 128
+LOSS_COLOR = "#00ADD8"
+DETECTED_COLOR = "#CE3262"
 
 TRAIN_BATCH_SIZE = 128
 INIT_BATCHES = 100
@@ -22,9 +25,6 @@ LATEST_WINDOW_SIZE = 500
 HISTORICAL_WINDOW_SIZE = 500
 LAST_TRAINED_WINDOW_SIZE = 500
 WINDOW_GAP = 500
-
-LOSS_COLOR = "#00ADD8"
-DETECTED_COLOR = "#CE3262"
 
 
 def main():
@@ -43,12 +43,18 @@ def main():
         download=True,
         transform=transform,
     )
+    test_dataset = datasets.MNIST(
+        root="./data/pytorch",
+        train=False,
+        download=True,
+        transform=transform,
+    )
 
     # Filter label
     train_filtered_idx = filter_index(
         train_dataset.targets,
         normal_labels=[1, 2, 3],
-        anomaly_labels=[7, 8, 9],
+        anomaly_labels=[0, 4, 5, 6, 7, 8, 9],
     )
     train_dataset.targets = to_anomaly_labels(
         train_dataset.targets[train_filtered_idx],
@@ -56,13 +62,30 @@ def main():
     )
     train_dataset.data = train_dataset.data[train_filtered_idx]
 
+    test_filterd_idx = filter_index(
+        test_dataset.targets,
+        normal_labels=[1, 2, 3],
+        anomaly_labels=[0, 4, 5, 6, 7, 8, 9],
+    )
+    test_dataset.targets = to_anomaly_labels(
+        test_dataset.targets[test_filterd_idx],
+        normal_labels=[1, 2, 3],
+    )
+    test_dataset.data = test_dataset.data[test_filterd_idx]
+
     # Data loader
     train_loader = DataLoader(
         train_dataset,
         batch_size=TRAIN_BATCH_SIZE,
         shuffle=True,
     )
+    test_loader = DataLoader(
+        test_dataset,
+        batch_size=TEST_BATCH_SIZE,
+        shuffle=True,
+    )
 
+    # Model
     auto_encoder = BasicAutoEncoder(
         encoder_dims=[784, 588, 392, 196],
         decoder_dims=[196, 392, 588, 784],
@@ -83,9 +106,6 @@ def main():
     losses = []
     detected = []
 
-    auroc = BinaryAUROC()
-    auprc = BinaryAUPRC()
-
     # Training
     for X, y in train_loader:
         X = X.view(X.size(0), -1)
@@ -95,9 +115,6 @@ def main():
         current_model = model_pool.get_model(model_pool.current_model_id)
 
         scores = current_model.predict(X)
-
-        auroc.update(scores, y)
-        auprc.update(scores, y)
 
         if current_model.num_batches > INIT_BATCHES:
             # Concept Drift detection
@@ -124,9 +141,22 @@ def main():
         loss = model_pool.stream_train(X)
         losses.append(loss.detach())
 
+    # Evaluation
+    auroc = BinaryAUROC()
+    auprc = BinaryAUPRC()
+
+    for X, y in test_loader:
+        X = X.view(X.size(0), -1)
+
+        scores = model_pool.predict(X)
+
+        auroc.update(scores, y)
+        auprc.update(scores, y)
+
     print(f"AUROC: {auroc.compute():0.5f}")
     print(f"AUPRC: {auprc.compute():0.5f}")
 
+    # Visualization
     losses = np.array(losses)
     detected = np.array(detected)
 

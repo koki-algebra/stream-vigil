@@ -1,5 +1,6 @@
 from logging import getLogger
 from logging.config import dictConfig
+from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -27,6 +28,42 @@ LAST_TRAINED_WINDOW_SIZE = 500
 WINDOW_GAP = 500
 
 
+def get_data_loader(
+    normal_labels: List[int],
+    anomaly_labels: List[int],
+    anomaly_ratio=0.01,
+    train=True,
+):
+    transform = transforms.Compose([transforms.ToTensor()])
+    dataset = datasets.MNIST(
+        root="./data/pytorch",
+        train=train,
+        download=True,
+        transform=transform,
+    )
+
+    filtered_idx = filter_index(
+        dataset.targets,
+        normal_labels=normal_labels,
+        anomaly_labels=anomaly_labels,
+        anomaly_ratio=anomaly_ratio,
+    )
+
+    dataset.targets = to_anomaly_labels(
+        dataset.targets[filtered_idx],
+        normal_labels=normal_labels,
+    )
+    dataset.data = dataset.data[filtered_idx]
+
+    loader = DataLoader(
+        dataset,
+        batch_size=TEST_BATCH_SIZE,
+        shuffle=True,
+    )
+
+    return loader
+
+
 def main():
     set_seed(RANDOM_STATE)
 
@@ -34,56 +71,6 @@ def main():
         config = safe_load(file)
     dictConfig(config)
     logger = getLogger(__name__)
-
-    # Dataset
-    transform = transforms.Compose([transforms.ToTensor()])
-    train_dataset = datasets.MNIST(
-        root="./data/pytorch",
-        train=True,
-        download=True,
-        transform=transform,
-    )
-    test_dataset = datasets.MNIST(
-        root="./data/pytorch",
-        train=False,
-        download=True,
-        transform=transform,
-    )
-
-    # Filter label
-    train_filtered_idx = filter_index(
-        train_dataset.targets,
-        normal_labels=[1, 2, 3],
-        anomaly_labels=[0, 4, 5, 6, 7, 8, 9],
-    )
-    train_dataset.targets = to_anomaly_labels(
-        train_dataset.targets[train_filtered_idx],
-        normal_labels=[1, 2, 3],
-    )
-    train_dataset.data = train_dataset.data[train_filtered_idx]
-
-    test_filterd_idx = filter_index(
-        test_dataset.targets,
-        normal_labels=[1, 2, 3],
-        anomaly_labels=[0, 4, 5, 6, 7, 8, 9],
-    )
-    test_dataset.targets = to_anomaly_labels(
-        test_dataset.targets[test_filterd_idx],
-        normal_labels=[1, 2, 3],
-    )
-    test_dataset.data = test_dataset.data[test_filterd_idx]
-
-    # Data loader
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=TRAIN_BATCH_SIZE,
-        shuffle=True,
-    )
-    test_loader = DataLoader(
-        test_dataset,
-        batch_size=TEST_BATCH_SIZE,
-        shuffle=True,
-    )
 
     # Model
     auto_encoder = BasicAutoEncoder(
@@ -103,6 +90,20 @@ def main():
         alpha=ALPHA,
     )
 
+    # Data loader
+    train_loader = get_data_loader(
+        normal_labels=[1, 2],
+        anomaly_labels=[7, 8, 9],
+        anomaly_ratio=0.001,
+    )
+    test_loader = get_data_loader(
+        normal_labels=[1, 2],
+        anomaly_labels=[0, 3, 4, 5, 6, 7, 8, 9],
+    )
+
+    auroc = BinaryAUROC()
+    auprc = BinaryAUPRC()
+
     losses = []
     detected = []
 
@@ -113,8 +114,6 @@ def main():
         model_pool.update_window(X)
 
         current_model = model_pool.get_model(model_pool.current_model_id)
-
-        scores = current_model.predict(X)
 
         if current_model.num_batches > INIT_BATCHES:
             # Concept Drift detection
@@ -142,9 +141,6 @@ def main():
         losses.append(loss.detach())
 
     # Evaluation
-    auroc = BinaryAUROC()
-    auprc = BinaryAUPRC()
-
     for X, y in test_loader:
         X = X.view(X.size(0), -1)
 

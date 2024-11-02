@@ -1,5 +1,6 @@
 from logging import getLogger
 from logging.config import dictConfig
+from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -13,6 +14,9 @@ from streamvigil.detectors import BasicAutoEncoder, BasicDetector
 from streamvigil.utils import filter_index, set_seed, to_anomaly_labels
 
 RANDOM_STATE = 80
+TEST_BATCH_SIZE = 128
+LOSS_COLOR = "#00ADD8"
+DETECTED_COLOR = "#CE3262"
 
 TRAIN_BATCH_SIZE = 128
 INIT_BATCHES = 100
@@ -23,8 +27,41 @@ HISTORICAL_WINDOW_SIZE = 500
 LAST_TRAINED_WINDOW_SIZE = 500
 WINDOW_GAP = 500
 
-LOSS_COLOR = "#00ADD8"
-DETECTED_COLOR = "#CE3262"
+
+def get_data_loader(
+    normal_labels: List[int],
+    anomaly_labels: List[int],
+    anomaly_ratio=0.01,
+    train=True,
+):
+    transform = transforms.Compose([transforms.ToTensor()])
+    dataset = datasets.FashionMNIST(
+        root="./data/pytorch",
+        train=train,
+        download=True,
+        transform=transform,
+    )
+
+    filtered_idx = filter_index(
+        dataset.targets,
+        normal_labels=normal_labels,
+        anomaly_labels=anomaly_labels,
+        anomaly_ratio=anomaly_ratio,
+    )
+
+    dataset.targets = to_anomaly_labels(
+        dataset.targets[filtered_idx],
+        normal_labels=normal_labels,
+    )
+    dataset.data = dataset.data[filtered_idx]
+
+    loader = DataLoader(
+        dataset,
+        batch_size=TEST_BATCH_SIZE,
+        shuffle=True,
+    )
+
+    return loader
 
 
 def main():
@@ -35,34 +72,7 @@ def main():
     dictConfig(config)
     logger = getLogger(__name__)
 
-    # Dataset
-    transform = transforms.Compose([transforms.ToTensor()])
-    train_dataset = datasets.FashionMNIST(
-        root="./data/pytorch",
-        train=True,
-        download=True,
-        transform=transform,
-    )
-
-    # Filter label
-    train_filtered_idx = filter_index(
-        train_dataset.targets,
-        normal_labels=[1, 2, 3],
-        anomaly_labels=[7, 8, 9],
-    )
-    train_dataset.targets = to_anomaly_labels(
-        train_dataset.targets[train_filtered_idx],
-        normal_labels=[1, 2, 3],
-    )
-    train_dataset.data = train_dataset.data[train_filtered_idx]
-
-    # Data loader
-    train_loader = DataLoader(
-        train_dataset,
-        batch_size=TRAIN_BATCH_SIZE,
-        shuffle=True,
-    )
-
+    # Model
     auto_encoder = BasicAutoEncoder(
         encoder_dims=[784, 588, 392, 196],
         decoder_dims=[196, 392, 588, 784],
@@ -80,6 +90,17 @@ def main():
         alpha=ALPHA,
     )
 
+    # Data loader
+    train_loader = get_data_loader(
+        normal_labels=[1, 2],
+        anomaly_labels=[7, 8, 9],
+        anomaly_ratio=0.001,
+    )
+    test_loader = get_data_loader(
+        normal_labels=[1, 2],
+        anomaly_labels=[0, 3, 4, 5, 6, 7, 8, 9],
+    )
+
     losses = []
     detected = []
 
@@ -93,11 +114,6 @@ def main():
         model_pool.update_window(X)
 
         current_model = model_pool.get_model(model_pool.current_model_id)
-
-        scores = current_model.predict(X)
-
-        auroc.update(scores, y)
-        auprc.update(scores, y)
 
         if current_model.num_batches > INIT_BATCHES:
             # Concept Drift detection
@@ -124,9 +140,19 @@ def main():
         loss = model_pool.stream_train(X)
         losses.append(loss.detach())
 
+    # Evaluation
+    for X, y in test_loader:
+        X = X.view(X.size(0), -1)
+
+        scores = model_pool.predict(X)
+
+        auroc.update(scores, y)
+        auprc.update(scores, y)
+
     print(f"AUROC: {auroc.compute():0.5f}")
     print(f"AUPRC: {auprc.compute():0.5f}")
 
+    # Visualization
     losses = np.array(losses)
     detected = np.array(detected)
 

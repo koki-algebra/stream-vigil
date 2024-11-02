@@ -124,7 +124,7 @@ def main():
         sample_size=0.10,
     )
     test_c_loader = get_data_loader(
-        normal_labels=[1, 2, 3, 4],
+        normal_labels=[3, 4],
         anomaly_labels=[0, 5, 6, 7, 8, 9],
         train=False,
         sample_size=0.75,

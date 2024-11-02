@@ -30,7 +30,7 @@ def get_data_loader(
     train=True,
 ):
     transform = transforms.Compose([transforms.ToTensor()])
-    dataset = datasets.MNIST(
+    dataset = datasets.FashionMNIST(
         root="./data/pytorch",
         train=train,
         download=True,

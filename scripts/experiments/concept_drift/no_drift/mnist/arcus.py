@@ -67,6 +67,7 @@ def main():
     dictConfig(config)
     logger = getLogger(__name__)
 
+    # Model
     auto_encoder = BasicAutoEncoder(
         encoder_dims=[784, 588, 392, 196],
         decoder_dims=[196, 392, 588, 784],
@@ -74,28 +75,8 @@ def main():
     )
     detector = BasicDetector(auto_encoder)
 
+    # Model Pool
     model_pool = ARCUSModelPool[ARCUSModel](detector)
-
-    # Dataset
-    transform = transforms.Compose([transforms.ToTensor()])
-    train_dataset = datasets.MNIST(
-        root="./data/pytorch",
-        train=True,
-        download=True,
-        transform=transform,
-    )
-
-    # Filter label
-    train_filtered_idx = filter_index(
-        train_dataset.targets,
-        normal_labels=[1, 2, 3],
-        anomaly_labels=[7, 8, 9],
-    )
-    train_dataset.targets = to_anomaly_labels(
-        train_dataset.targets[train_filtered_idx],
-        normal_labels=[1, 2, 3],
-    )
-    train_dataset.data = train_dataset.data[train_filtered_idx]
 
     # Data loader
     train_loader = get_data_loader(
@@ -107,6 +88,9 @@ def main():
         normal_labels=[1, 2],
         anomaly_labels=[0, 3, 4, 5, 6, 7, 8, 9],
     )
+
+    auroc = BinaryAUROC()
+    auprc = BinaryAUPRC()
 
     # Train initial model
     init_model_id = model_pool.add_model()
@@ -120,9 +104,6 @@ def main():
     reliabilities = []
     losses = []
     detected = []
-
-    auroc = BinaryAUROC()
-    auprc = BinaryAUPRC()
 
     # Training
     for X, y in train_loader:

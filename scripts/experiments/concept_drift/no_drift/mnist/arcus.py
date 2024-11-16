@@ -102,6 +102,7 @@ def main():
 
     reliabilities = [model_pool._reliability]
     detected = []
+    num_models = []
 
     # Training
     for X, y in train_loader:
@@ -109,6 +110,8 @@ def main():
 
         model_pool.update_reliability(X)
         reliabilities.append(model_pool._reliability)
+
+        num_models.append(len(model_pool.get_models()))
 
         if model_pool.is_drift():
             logger.info("concept drift detected!")
@@ -140,6 +143,7 @@ def main():
     print(f"AUROC: {auroc.compute():0.5f}")
     print(f"AUPRC: {auprc.compute():0.5f}")
 
+    # reliability and detected
     plt.figure(figsize=(12, 6))
     plt.plot(reliabilities, label="Reliability", color=RELIABILITY_COLOR)
 
@@ -151,6 +155,19 @@ def main():
     plt.ylabel("Model Pool Reliability")
     plt.legend()
     plt.title("No Drift (MNIST)")
+    plt.tight_layout()
+    plt.grid(True)
+    plt.show()
+
+    # num models
+    plt.figure(figsize=(12, 6))
+    plt.plot(num_models, label="Number of Models", color="gray")
+
+    plt.xlabel("Iterations")
+    plt.ylabel("Number of Models")
+    plt.legend()
+    plt.title("Number of Models in Model Pool (MNIST)")
+    plt.yticks(range(min(num_models), max(num_models) + 1))
     plt.tight_layout()
     plt.grid(True)
     plt.show()

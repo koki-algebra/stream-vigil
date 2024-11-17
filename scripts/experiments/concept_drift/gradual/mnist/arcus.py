@@ -26,6 +26,7 @@ def get_data_loader(
     normal_labels: List[int],
     anomaly_labels: List[int],
     anomaly_ratio=0.01,
+    sample_size=1.0,
     train=True,
 ):
     transform = transforms.Compose([transforms.ToTensor()])
@@ -41,6 +42,7 @@ def get_data_loader(
         normal_labels=normal_labels,
         anomaly_labels=anomaly_labels,
         anomaly_ratio=anomaly_ratio,
+        sample_size=sample_size,
     )
 
     dataset.targets = to_anomaly_labels(
@@ -68,8 +70,8 @@ def main():
 
     # Model
     auto_encoder = BasicAutoEncoder(
-        encoder_dims=[784, 588, 392, 196, 98],
-        decoder_dims=[98, 196, 392, 588, 784],
+        encoder_dims=[784, 588, 392, 196],
+        decoder_dims=[196, 392, 588, 784],
         batch_norm=True,
     )
     detector = BasicDetector(auto_encoder)
@@ -82,21 +84,37 @@ def main():
         normal_labels=[1, 2],
         anomaly_labels=[7, 8, 9],
         anomaly_ratio=0.001,
+        sample_size=0.75,
     )
     train_b_loader = get_data_loader(
+        normal_labels=[1, 2, 3, 4],
+        anomaly_labels=[7, 8, 9],
+        anomaly_ratio=0.001,
+        sample_size=0.10,
+    )
+    train_c_loader = get_data_loader(
         normal_labels=[3, 4],
         anomaly_labels=[7, 8, 9],
         anomaly_ratio=0.001,
+        sample_size=0.75,
     )
     test_a_loader = get_data_loader(
         normal_labels=[1, 2],
         anomaly_labels=[0, 3, 4, 5, 6, 7, 8, 9],
         train=False,
+        sample_size=0.75,
     )
     test_b_loader = get_data_loader(
-        normal_labels=[3, 4],
-        anomaly_labels=[1, 2, 5, 6, 7, 8, 9],
+        normal_labels=[1, 2, 3, 4],
+        anomaly_labels=[0, 5, 6, 7, 8, 9],
         train=False,
+        sample_size=0.10,
+    )
+    test_c_loader = get_data_loader(
+        normal_labels=[3, 4],
+        anomaly_labels=[0, 5, 6, 7, 8, 9],
+        train=False,
+        sample_size=0.75,
     )
 
     auroc = BinaryAUROC()
@@ -178,6 +196,42 @@ def main():
         auroc.update(scores, y)
         auprc.update(scores, y)
 
+    # Training for concept C
+    for X, y in train_c_loader:
+        X = X.view(X.size(0), -1)
+
+        model_pool.update_reliability(X)
+        reliabilities.append(model_pool._reliability)
+
+        num_models.append(len(model_pool.get_models()))
+
+        if model_pool.is_drift():
+            logger.info("concept drift detected!")
+            model_id = model_pool.add_model()
+
+            logger.info(f"new model {model_id} is added")
+
+            model_pool.stream_train(model_id, X)
+
+            if model_pool.compress(X, model_id):
+                logger.info("model pool compressed!")
+
+            detected.append(1)
+        else:
+            model_id = model_pool.find_most_reliable_model()
+            model_pool.stream_train(model_id, X)
+
+            detected.append(0)
+
+    # Evaluation for concept C
+    for X, y in test_c_loader:
+        X = X.view(X.size(0), -1)
+
+        scores = model_pool.predict(X)
+
+        auroc.update(scores, y)
+        auprc.update(scores, y)
+
     print(f"AUROC: {auroc.compute():0.5f}")
     print(f"AUPRC: {auprc.compute():0.5f}")
 
@@ -192,7 +246,7 @@ def main():
     plt.xlabel("Iterations")
     plt.ylabel("Model Pool Reliability")
     plt.legend()
-    plt.title("Abrupt Drift (MNIST)")
+    plt.title("Gradual Drift (MNIST)")
     plt.tight_layout()
     plt.grid(True)
     plt.show()

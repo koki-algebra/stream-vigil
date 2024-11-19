@@ -68,8 +68,8 @@ def main():
 
     # Model
     auto_encoder = BasicAutoEncoder(
-        encoder_dims=[784, 588, 392, 196, 98],
-        decoder_dims=[98, 196, 392, 588, 784],
+        encoder_dims=[784, 588, 392, 196],
+        decoder_dims=[196, 392, 588, 784],
         batch_norm=True,
     )
     detector = BasicDetector(auto_encoder)

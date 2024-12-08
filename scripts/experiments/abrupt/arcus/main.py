@@ -1,6 +1,6 @@
 from typing import List
 
-from scripts.experiments.concept_drift.abrupt.arcus import fmnist, kmnist, mnist
+from scripts.experiments.abrupt.arcus import fmnist, kmnist, mnist
 from streamvigil.utils import plot_aucus_result
 
 RANDOM_STATE = 80

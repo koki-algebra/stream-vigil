@@ -1,6 +1,6 @@
 from typing import List
 
-from scripts.experiments.concept_drift.abrupt.proposed_method import fmnist, kmnist, mnist
+from scripts.experiments.recurring.proposed_method import fmnist, kmnist, mnist
 from streamvigil.utils import plot_proposed_result
 
 RANDOM_STATE = 80

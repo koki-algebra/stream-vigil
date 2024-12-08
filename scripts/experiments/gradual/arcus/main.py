@@ -1,6 +1,6 @@
 from typing import List
 
-from scripts.experiments.concept_drift.recurring.arcus import fmnist, kmnist, mnist
+from scripts.experiments.gradual.arcus import fmnist, kmnist, mnist
 from streamvigil.utils import plot_aucus_result
 
 RANDOM_STATE = 80
@@ -51,7 +51,7 @@ def main():
     detected_colors = ["navy", "purple", "darkgreen"]
     num_model_colors = ["blue", "teal", "skyblue"]
     dataset_names = ["MNIST", "FMNIST", "KMNIST"]
-    drift_type = "Recurring Drift"
+    drift_type = "Gradual Drift"
 
     plot_aucus_result(
         reliabilities_list,

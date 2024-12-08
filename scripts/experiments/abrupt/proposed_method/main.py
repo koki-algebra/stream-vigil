@@ -1,6 +1,6 @@
 from typing import List
 
-from scripts.experiments.concept_drift.no_drift.proposed_method import fmnist, kmnist, mnist
+from scripts.experiments.abrupt.proposed_method import fmnist, kmnist, mnist
 from streamvigil.utils import plot_proposed_result
 
 RANDOM_STATE = 80
@@ -64,7 +64,7 @@ def main():
     loss_colors = ["blue", "teal", "skyblue"]
     detected_colors = ["navy", "purple", "darkgreen"]
     dataset_names = ["MNIST", "FMNIST", "KMNIST"]
-    drift_type = "No Drift"
+    drift_type = "Abrupt Drift"
 
     plot_proposed_result(
         losses_list,

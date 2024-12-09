@@ -64,7 +64,7 @@ def main():
     loss_colors = ["blue", "teal", "skyblue"]
     detected_colors = ["navy", "purple", "darkgreen"]
     dataset_names = ["MNIST", "FMNIST", "KMNIST"]
-    drift_type = "Abrupt Drift"
+    drift_type = "Recurring Drift"
 
     plot_proposed_result(
         losses_list,

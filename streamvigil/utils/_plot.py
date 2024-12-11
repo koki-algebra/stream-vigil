@@ -28,7 +28,9 @@ def plot_aucus_result(
 
         detected_indices = [i for i, x in enumerate(detected) if x == 1]
         plt.scatter(
-            detected_indices, [1] * len(detected_indices), label=f"Detected ({dataset_name})", color=detected_color
+            detected_indices, [1] * len(detected_indices),
+            label=f"Detected ({dataset_name})",
+            color=detected_color,
         )
 
     plt.xlabel("Iterations")
@@ -66,8 +68,18 @@ def plot_proposed_result(
     dataset_names: List[str],
     drift_type: str,
 ):
+    plt.rcParams.update({
+        "font.size": 14,
+    })
+
     _, ax1 = plt.subplots(figsize=(12, 6))
+    ax1.set_xlabel("Iterations")
+    ax1.set_ylabel("Loss")
+    
     ax2 = ax1.twinx()
+    ax2.set_ylabel("Drift Detected")
+    ax2.set_yticks([0, 1])
+    ax2.set_ylim(-0.1, 1.1)
 
     for i in range(len(losses_list)):
         losses = np.array(losses_list[i])
@@ -76,11 +88,10 @@ def plot_proposed_result(
         detected_color = detected_colors[i]
         dataset_name = dataset_names[i]
 
+        # plot
         ax1.plot(losses, color=loss_color, label=f"Losses ({dataset_name})")
-        ax1.set_xlabel("Iterations")
-        ax1.set_ylabel("Loss", color=loss_color)
-        ax1.tick_params(axis="y", labelcolor=loss_color)
 
+        # scatter plot
         detected_indices = np.where(detected == 1)[0]
         ax2.scatter(
             detected_indices,
@@ -89,11 +100,8 @@ def plot_proposed_result(
             label=f"Drift Detected ({dataset_name})",
             alpha=0.6,
         )
-        ax2.set_ylabel("Drift Detected", color=detected_color)
-        ax2.tick_params(axis="y", labelcolor=detected_color)
-        ax2.set_yticks([0, 1])
-        ax2.set_ylim(-0.1, 1.1)
 
+        # legend
         lines1, labels1 = ax1.get_legend_handles_labels()
         lines2, labels2 = ax2.get_legend_handles_labels()
         ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper left")

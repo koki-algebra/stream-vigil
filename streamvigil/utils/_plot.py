@@ -14,7 +14,10 @@ def plot_aucus_result(
     dataset_names: List[str],
     drift_type: str,
 ):
-    # Concept Drift Detection
+    plt.rcParams.update({
+        "font.size": 14,
+    })
+
     plt.figure(figsize=(12, 6))
 
     for i in range(len(reliabilities_list)):
